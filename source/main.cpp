@@ -114,6 +114,8 @@ struct IsValue { static constexpr bool value= false; };
 template <typename T>
 struct IsValue<Value<T>> { static constexpr bool value= true; };
 
+/// @todo Simplify
+
 template <typename T>
 struct ToExpr {
 	using PlainT= RemoveRef<RemoveConst<T>>;
@@ -447,7 +449,6 @@ protected:
 
 class Domain {
 public:
-
 	void solve() {
 		Gecode::DFS<SolverSpace> e(space.get());
 		// search and print all solutions
@@ -456,6 +457,7 @@ public:
 		}  
 
 		space->apply();
+		dirty= false;
 	}
 
 	//
@@ -479,11 +481,16 @@ public:
 	{
 		static_assert(isRelation<Expr<T>>(), "Expression is not a relation");
 		space->addRelation(rel);
+		dirty= true;
 	}
 
 	SolverSpace& getSpace() { return *space.get(); }
+
+	bool isDirty() const { return dirty; }
+
 private:
 	std::unique_ptr<SolverSpace> space{new SolverSpace};
+	bool dirty= false;
 };
 
 /// A value that is solved by constraints
@@ -509,9 +516,14 @@ public:
 	T& get() { return value; }
 	const T& get() const { return value; }
 
-	operator const T&() const { return value; }
+	operator const T&() const
+	{
+		if (getDomain().isDirty())
+			getDomain().solve();
+		return value;
+	}
 
-	Domain& getDomain() { return *domain; }
+	Domain& getDomain() const { return *domain; }
 
 private:
 	Domain* domain;
@@ -556,8 +568,6 @@ int main()
 	rel(box1.top() == 30 && box2.bottom() == 0);
 	rel(box1.bottom() == box2.top() && box1.height() == box2.height());
 
-	domain.solve();
-
 	std::cout << box1.bottom() << std::endl;
 
 	std::cout << "box1 " << box1 << std::endl;
@@ -567,6 +577,5 @@ int main()
 	constraint::Domain d;
 	constraint::Value<int> x{d}, y{d};
 	rel(x + x == y && y + 1 == x - 1);
-	d.solve();
 	std::cout << x << ", " << y; // -2, -4
 }
