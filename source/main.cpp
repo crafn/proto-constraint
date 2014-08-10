@@ -6,7 +6,6 @@
 #include <vector>
 
 namespace constraint {
-
 namespace detail {
 
 template <bool B>
@@ -15,7 +14,7 @@ struct EnableIf {};
 template <>
 struct EnableIf<true> { using Type= void; };
 
-} // Detail
+} // detail
 
 template <bool B>
 using EnableIf= typename detail::EnableIf<B>::Type;
@@ -34,8 +33,8 @@ class Domain;
 template <typename T>
 struct Expr {
 	T value;
-public:
 
+public:
 	Expr(T t)
 		: value(t) { }
 
@@ -48,7 +47,6 @@ public:
 	auto eval() const
 	-> decltype(value.eval())
 	{ return value.eval(); }
-
 
 };
 
@@ -203,7 +201,6 @@ struct Eq {
 	{
 		return lhs == rhs;
 	}
-
 
 };
 
@@ -577,5 +574,5 @@ int main()
 	constraint::Domain d;
 	constraint::Value<int> x{d}, y{d};
 	rel(x + x == y && y + 1 == x - 1);
-	std::cout << x << ", " << y; // -2, -4
+	std::cout << x << ", " << y << std::endl; // -2, -4
 }
