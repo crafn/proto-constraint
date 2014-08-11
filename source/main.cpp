@@ -530,6 +530,7 @@ public:
 		assert(solver);
 		
 		// Search solutions
+		/// @todo Do something smart in cases of many/none outcomes
 		Gecode::DFS<SolverSpace> e(solver.get());
 		while (UniquePtr<SolverSpace> s{e.next()}) {
 			//s->print();
@@ -659,7 +660,7 @@ public:
 
 	Box()
 	{
-		constraint::rel(height() > 0); /// @todo Change to >=
+		rel(height() > 0); /// @todo Change to >=
 	}
 
 	constraint::Var<int>& top() { return m_top; }
