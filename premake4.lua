@@ -14,11 +14,11 @@ solution "gecode_test"
 	kind "ConsoleApp"
     language "C++"
 
-    files { "./source/**.hpp", "./source/**.def",
-            "./source/**.cpp", "./source/**.tpp" }
+    files { "./constraint/**.hpp", "./constraint/**.def",
+            "./constraint/**.cpp", "./constraint/**.tpp" }
 
-    includedirs { "./source/" }
-    vpaths { ["*"] = "./source/**" }
+    includedirs { "./constraint/" }
+    vpaths { ["*"] = "./constraint/**" }
 
     links { "gecodeminimodel",
 			"gecodedriver",
