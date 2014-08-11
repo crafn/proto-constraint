@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-namespace constraint {
+namespace eq {
 namespace detail {
 
 template <bool B>
@@ -631,7 +631,7 @@ private:
 	T value;
 };
 
-/// Register expression as constraint
+/// Register expression as relation
 template <typename E>
 void rel(E e)
 {
@@ -651,7 +651,7 @@ void rel(E e)
 	preserved->addRelation(e);
 }
 
-} // constraint
+} // eq
 namespace gui {
 
 class Box {
@@ -659,17 +659,17 @@ public:
 
 	Box()
 	{
-		constraint::rel(height() > 0); /// @todo Change to >=
+		eq::rel(height() > 0); /// @todo Change to >=
 	}
 
-	constraint::Var<int>& top() { return m_top; }
-	constraint::Var<int>& bottom() { return m_bottom; }
+	eq::Var<int>& top() { return m_top; }
+	eq::Var<int>& bottom() { return m_bottom; }
 
 	auto height() -> decltype(top() - bottom()) { return top() - bottom(); }
 
 private:
-	constraint::Var<int> m_top;
-	constraint::Var<int> m_bottom;
+	eq::Var<int> m_top;
+	eq::Var<int> m_bottom;
 };
 
 } // gui
@@ -691,7 +691,7 @@ int main()
 	}
 
 	{
-		constraint::Var<int> x, y;
+		eq::Var<int> x, y;
 		rel(x + x == y && y + 1 == x - 1);
 		std::cout << x << ", " << y << std::endl; // -2, -4
 	}
