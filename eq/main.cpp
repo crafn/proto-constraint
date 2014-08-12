@@ -43,7 +43,7 @@ int main()
 
 	{
 		eq::Var<int> x, y;
-		rel(x + x == y && y + 1 == x - 1);
+		eq::rel(x + x == y && y + 1 == x - 1);
 		std::cout << x << ", " << y << std::endl; // -2, -4
 	}
 }

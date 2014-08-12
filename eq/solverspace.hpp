@@ -122,6 +122,13 @@ protected:
 		{ return e.get().get(); }
 	};
 
+	template <typename E, typename Op>
+	struct GecodeRel<Expr<UOp<E, Op>>> {
+		static auto eval(Expr<UOp<E, Op>> e)
+		-> decltype(Op::eval(gecodeRel(e.get().e)))
+		{ return	Op::eval(gecodeRel(e.get().e)); }
+	};
+
 	template <typename E1, typename E2, typename Op>
 	struct GecodeRel<Expr<BiOp<E1, E2, Op>>> {
 		static auto eval(Expr<BiOp<E1, E2, Op>> e)
