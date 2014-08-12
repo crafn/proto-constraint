@@ -14,5 +14,4 @@ Missing features:
 - copy & move for `eq::Var<T>`
 - support for floating point values
 - support for user-defined types
-- support for all standard operators
 - support for user-defined operators/functions

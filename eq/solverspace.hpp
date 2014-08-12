@@ -136,6 +136,16 @@ protected:
 		{ return	Op::eval(gecodeRel(e.get().lhs), gecodeRel(e.get().rhs)); }
 	};
 
+	// Special cases
+	
+	/// Skip unary + because it seems to be unsupported
+	template <typename E>
+	struct GecodeRel<Expr<UOp<E, Pos>>> {
+		static auto eval(Expr<UOp<E, Pos>> e)
+		-> decltype(gecodeRel(e.get().e))
+		{ return	gecodeRel(e.get().e); }
+	};
+
 	DynArray<VarInfo<int>> intVars;
 
 	// Completely arbitrary

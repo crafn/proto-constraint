@@ -213,6 +213,34 @@ struct Sub {
 	{ return	lhs - rhs; }
 };
 
+struct Mul {
+	template <typename T1, typename T2>
+	static auto eval(T1&& lhs, T2&& rhs)
+	-> decltype(lhs * rhs)
+	{ return	lhs * rhs; }
+};
+
+struct Div {
+	template <typename T1, typename T2>
+	static auto eval(T1&& lhs, T2&& rhs)
+	-> decltype(lhs / rhs)
+	{ return	lhs / rhs; }
+};
+
+struct Pos {
+	template <typename T>
+	static auto eval(T&& rhs)
+	-> decltype(+rhs)
+	{ return	+rhs; }
+};
+
+struct Neg {
+	template <typename T>
+	static auto eval(T&& rhs)
+	-> decltype(-rhs)
+	{ return	-rhs; }
+};
+
 struct Eq {
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
@@ -291,6 +319,34 @@ template <typename E1, typename E2, typename=
 auto operator-(E1&& e1, E2&& e2)
 ->	Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Sub>>
 { return BiOp<decltype(expr(e1)), decltype(expr(e2)), Sub>{expr(e1), expr(e2)}; }
+
+/// *
+template <typename E1, typename E2, typename=
+	EnableIf<isExprBiOpQuality<E1, E2>()>>
+auto operator*(E1&& e1, E2&& e2)
+->	Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Mul>>
+{ return BiOp<decltype(expr(e1)), decltype(expr(e2)), Mul>{expr(e1), expr(e2)}; }
+
+/// /
+template <typename E1, typename E2, typename=
+	EnableIf<isExprBiOpQuality<E1, E2>()>>
+auto operator/(E1&& e1, E2&& e2)
+->	Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Div>>
+{ return BiOp<decltype(expr(e1)), decltype(expr(e2)), Div>{expr(e1), expr(e2)}; }
+
+/// Unary +
+template <typename E, typename=
+	EnableIf<isExprUOpQuality<E>()>>
+auto operator+(E&& e)
+->	Expr<UOp<decltype(expr(e)), Pos>>
+{ return UOp<decltype(expr(e)), Pos>{expr(e)}; }
+
+/// Unary -
+template <typename E, typename=
+	EnableIf<isExprUOpQuality<E>()>>
+auto operator-(E&& e)
+->	Expr<UOp<decltype(expr(e)), Neg>>
+{ return UOp<decltype(expr(e)), Neg>{expr(e)}; }
 
 /// ==
 template <typename E1, typename E2, typename=
