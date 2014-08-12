@@ -76,6 +76,7 @@ struct BiOp {
 	-> decltype(Op::eval(lhs.eval(), rhs.eval()))
 	{ return Op::eval(lhs.eval(), rhs.eval()); }
 };
+
 namespace detail {
 
 template <typename T>
@@ -148,13 +149,17 @@ constexpr bool isExprOpQuality()
 	return isExpr<T1>() || isVar<T1>() || isExpr<T2>() || isVar<T2>();
 }
 
+/// T to Expr conversion
 template <typename T>
 constexpr auto expr(T&& t)
 -> decltype(detail::ToExpr<T>::eval(std::forward<T>(t)))
 { return detail::ToExpr<T>::eval(std::forward<T>(t)); }
 
+// Operations
 
 struct Add {
+	static constexpr bool isRelational= false;
+
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs + rhs)
@@ -162,6 +167,8 @@ struct Add {
 };
 
 struct Sub {
+	static constexpr bool isRelational= false;
+
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs - rhs)
@@ -169,24 +176,75 @@ struct Sub {
 };
 
 struct Eq {
+	static constexpr bool isRelational= true;
+
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs == rhs)
 	{ return	lhs == rhs; }
 };
 
-struct Greater {
+struct Neq {
+	static constexpr bool isRelational= true;
+
+	template <typename T1, typename T2>
+	static auto eval(T1&& lhs, T2&& rhs)
+	-> decltype(lhs != rhs)
+	{ return	lhs != rhs; }
+};
+
+struct Gr {
+	static constexpr bool isRelational= true;
+
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs > rhs)
 	{ return	lhs > rhs; }
 };
 
+struct Ls {
+	static constexpr bool isRelational= true;
+
+	template <typename T1, typename T2>
+	static auto eval(T1&& lhs, T2&& rhs)
+	-> decltype(lhs < rhs)
+	{ return	lhs < rhs; }
+};
+
+struct Geq {
+	static constexpr bool isRelational= true;
+
+	template <typename T1, typename T2>
+	static auto eval(T1&& lhs, T2&& rhs)
+	-> decltype(lhs >= rhs)
+	{ return	lhs >= rhs; }
+};
+
+struct Leq {
+	static constexpr bool isRelational= true;
+
+	template <typename T1, typename T2>
+	static auto eval(T1&& lhs, T2&& rhs)
+	-> decltype(lhs <= rhs)
+	{ return	lhs <= rhs; }
+};
+
 struct And {
+	static constexpr bool isRelational= false;
+
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs && rhs)
 	{ return	lhs && rhs; }
+};
+
+struct Or {
+	static constexpr bool isRelational= false;
+
+	template <typename T1, typename T2>
+	static auto eval(T1&& lhs, T2&& rhs)
+	-> decltype(lhs || rhs)
+	{ return	lhs || rhs; }
 };
 
 /// @todo Not sure if needs perfect forwarding
@@ -195,49 +253,72 @@ struct And {
 template <typename E1, typename E2, typename=
 	EnableIf<isExprOpQuality<E1, E2>()>>
 auto operator+(E1&& e1, E2&& e2)
--> Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Add>>
-{
-	return BiOp<decltype(expr(e1)), decltype(expr(e2)), Add>{expr(e1), expr(e2)};
-}
+->	Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Add>>
+{ return BiOp<decltype(expr(e1)), decltype(expr(e2)), Add>{expr(e1), expr(e2)}; }
 
 /// -
 template <typename E1, typename E2, typename=
 	EnableIf<isExprOpQuality<E1, E2>()>>
 auto operator-(E1&& e1, E2&& e2)
--> Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Sub>>
-{
-	return BiOp<decltype(expr(e1)), decltype(expr(e2)), Sub>{expr(e1), expr(e2)};
-}
+->	Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Sub>>
+{ return BiOp<decltype(expr(e1)), decltype(expr(e2)), Sub>{expr(e1), expr(e2)}; }
 
 /// ==
 template <typename E1, typename E2, typename=
 	EnableIf<isExprOpQuality<E1, E2>()>>
 auto operator==(E1&& e1, E2&& e2)
--> Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Eq>>
-{
-	return BiOp<decltype(expr(e1)), decltype(expr(e2)), Eq>{expr(e1), expr(e2)};
-}
+->	Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Eq>>
+{ return BiOp<decltype(expr(e1)), decltype(expr(e2)), Eq>{expr(e1), expr(e2)}; }
 
+/// !=
+template <typename E1, typename E2, typename=
+	EnableIf<isExprOpQuality<E1, E2>()>>
+auto operator!=(E1&& e1, E2&& e2)
+->	Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Neq>>
+{ return BiOp<decltype(expr(e1)), decltype(expr(e2)), Neq>{expr(e1), expr(e2)}; }
 
 /// >
 template <typename E1, typename E2, typename=
 	EnableIf<isExprOpQuality<E1, E2>()>>
 auto operator>(E1&& e1, E2&& e2)
--> Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Greater>>
-{
-	return BiOp<decltype(expr(e1)), decltype(expr(e2)), Greater>{expr(e1), expr(e2)};
-}
+->	Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Gr>>
+{ return BiOp<decltype(expr(e1)), decltype(expr(e2)), Gr>{expr(e1), expr(e2)}; }
+
+/// <
+template <typename E1, typename E2, typename=
+	EnableIf<isExprOpQuality<E1, E2>()>>
+auto operator<(E1&& e1, E2&& e2)
+->	Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Ls>>
+{ return BiOp<decltype(expr(e1)), decltype(expr(e2)), Ls>{expr(e1), expr(e2)}; }
+
+/// >=
+template <typename E1, typename E2, typename=
+	EnableIf<isExprOpQuality<E1, E2>()>>
+auto operator>=(E1&& e1, E2&& e2)
+->	Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Geq>>
+{ return BiOp<decltype(expr(e1)), decltype(expr(e2)), Geq>{expr(e1), expr(e2)}; }
+
+/// <=
+template <typename E1, typename E2, typename=
+	EnableIf<isExprOpQuality<E1, E2>()>>
+auto operator<=(E1&& e1, E2&& e2)
+->	Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Leq>>
+{ return BiOp<decltype(expr(e1)), decltype(expr(e2)), Leq>{expr(e1), expr(e2)}; }
 
 /// &&
 template <typename E1, typename E2, typename=
 	EnableIf<isExprOpQuality<E1, E2>()>>
 auto operator&&(E1&& e1, E2&& e2)
--> Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), And>>
-{
-	return BiOp<decltype(expr(e1)), decltype(expr(e2)), And>{expr(e1), expr(e2)};
-}
+->	Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), And>>
+{ return BiOp<decltype(expr(e1)), decltype(expr(e2)), And>{expr(e1), expr(e2)}; }
 
-// Expression parsing
+/// ||
+template <typename E1, typename E2, typename=
+	EnableIf<isExprOpQuality<E1, E2>()>>
+auto operator||(E1&& e1, E2&& e2)
+->	Expr<BiOp<decltype(expr(e1)), decltype(expr(e2)), Or>>
+{ return BiOp<decltype(expr(e1)), decltype(expr(e2)), Or>{expr(e1), expr(e2)}; }
+
 
 namespace detail {
 
@@ -246,18 +327,18 @@ struct IsRelation {
 	static constexpr bool value= false;
 };
 
-template <typename E1, typename E2>
-struct IsRelation<Expr<BiOp<E1, E2, Eq>>> {
-	static constexpr bool value= true;
-};
-
-template <typename E1, typename E2>
-struct IsRelation<Expr<BiOp<E1, E2, Greater>>> {
-	static constexpr bool value= true;
+template <typename E1, typename E2, typename Op>
+struct IsRelation<Expr<BiOp<E1, E2, Op>>> {
+	static constexpr bool value= Op::isRelational;
 };
 
 template <typename E1, typename E2>
 struct IsRelation<Expr<BiOp<E1, E2, And>>> {
+	static constexpr bool value= IsRelation<E1>::value && IsRelation<E2>::value;
+};
+
+template <typename E1, typename E2>
+struct IsRelation<Expr<BiOp<E1, E2, Or>>> {
 	static constexpr bool value= IsRelation<E1>::value && IsRelation<E2>::value;
 };
 

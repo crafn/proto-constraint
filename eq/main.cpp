@@ -10,7 +10,7 @@ public:
 
 	Box()
 	{
-		eq::rel(height() > 0); /// @todo Change to >=
+		eq::rel(height() >= 0);
 	}
 
 	eq::Var<int>& top() { return m_top; }
