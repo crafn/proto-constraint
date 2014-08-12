@@ -200,8 +200,6 @@ constexpr auto expr(T&& t)
 // Basic operations
 
 struct Add {
-	static constexpr bool hasBoolResult= false;
-
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs + rhs)
@@ -209,8 +207,6 @@ struct Add {
 };
 
 struct Sub {
-	static constexpr bool hasBoolResult= false;
-
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs - rhs)
@@ -218,8 +214,6 @@ struct Sub {
 };
 
 struct Eq {
-	static constexpr bool hasBoolResult= true;
-
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs == rhs)
@@ -227,8 +221,6 @@ struct Eq {
 };
 
 struct Neq {
-	static constexpr bool hasBoolResult= true;
-
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs != rhs)
@@ -236,8 +228,6 @@ struct Neq {
 };
 
 struct Gr {
-	static constexpr bool hasBoolResult= true;
-
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs > rhs)
@@ -245,8 +235,6 @@ struct Gr {
 };
 
 struct Ls {
-	static constexpr bool hasBoolResult= true;
-
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs < rhs)
@@ -254,8 +242,6 @@ struct Ls {
 };
 
 struct Geq {
-	static constexpr bool hasBoolResult= true;
-
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs >= rhs)
@@ -263,8 +249,6 @@ struct Geq {
 };
 
 struct Leq {
-	static constexpr bool hasBoolResult= true;
-
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs <= rhs)
@@ -272,8 +256,6 @@ struct Leq {
 };
 
 struct And {
-	static constexpr bool hasBoolResult= true;
-
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs && rhs)
@@ -281,8 +263,6 @@ struct And {
 };
 
 struct Or {
-	static constexpr bool hasBoolResult= true;
-
 	template <typename T1, typename T2>
 	static auto eval(T1&& lhs, T2&& rhs)
 	-> decltype(lhs || rhs)
@@ -290,8 +270,6 @@ struct Or {
 };
 
 struct Not {
-	static constexpr bool hasBoolResult= true;
-
 	template <typename T>
 	static auto eval(T&& rhs)
 	-> decltype(!rhs)
@@ -388,12 +366,12 @@ struct IsRelation {
 
 template <typename E, typename Op>
 struct IsRelation<Expr<UOp<E, Op>>> {
-	static constexpr bool value= Op::hasBoolResult;
+	static constexpr bool value= isSame<Return<decltype(&UOp<E, Op>::eval)>, bool>();
 };
 
 template <typename E1, typename E2, typename Op>
 struct IsRelation<Expr<BiOp<E1, E2, Op>>> {
-	static constexpr bool value= Op::hasBoolResult;
+	static constexpr bool value= isSame<Return<decltype(&BiOp<E1, E2, Op>::eval)>, bool>();
 };
 
 } // detail

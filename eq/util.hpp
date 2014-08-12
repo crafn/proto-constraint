@@ -30,7 +30,25 @@ template <typename T>
 using UniquePtr= std::unique_ptr<T>;
 template <typename T>
 using SharedPtr= std::shared_ptr<T>;
+template <typename T1, typename T2>
+constexpr bool isSame() { return std::is_same<T1, T2>::value; }
 #define ensure assert
+
+template <typename T>
+struct MethodPtr;
+
+template <typename R, typename C, typename... Args>
+struct MethodPtr<R (C::*)(Args...)> {
+	using Return= R;
+};
+
+template <typename R, typename C, typename... Args>
+struct MethodPtr<R (C::*)(Args...) const> {
+	using Return= R;
+};
+
+template <typename T>
+using Return= typename MethodPtr<T>::Return;
 
 template <typename... Ts>
 Set<Ts...> operator+(Set<Ts...> lhs, const Set<Ts...>& rhs)
