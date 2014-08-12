@@ -6,7 +6,7 @@ Mathematical equations to C++ using expression templates and constraint solving 
 Example:
 
     eq::Var<int> x, y;
-    rel(x + x == y && y + 1 == x - 1);
+    rel(x*2 == y && y + 1 == x - 1);
     std::cout << x << ", " << y; // -2, -4
 
 Missing features:
