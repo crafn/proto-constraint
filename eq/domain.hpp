@@ -31,10 +31,16 @@ public:
 	template <typename T>
 	void addRelation(Expr<T> rel)
 	{
-		static_assert(isRelation<Expr<T>>(), "Expression is not a relation");
-
 		addRelations.push_back([rel] (Domain& d, Solver& solver)
 		{ solver.addRelation(rel); });
+		dirty= true;
+	}
+
+	template <typename T>
+	void addRelation(Expr<T> rel, int priority)
+	{
+		addRelations.push_back([rel, priority] (Domain& d, Solver& solver)
+		{ solver.addRelation(rel, priority); });
 		dirty= true;
 	}
 
@@ -60,12 +66,11 @@ public:
 	{
 		assert(this != &other);
 
-		vars= vars + other.vars;	
-		addVars= addVars + other.addVars;
-	
+		vars= vars + other.vars;
 		for (auto&& var : other.vars)
 			var->setDomainPtr(shared_from_this());
-
+		
+		addVars= addVars + other.addVars;
 		addRelations= addRelations + other.addRelations;
 		dirty= true;
 

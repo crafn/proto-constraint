@@ -5,12 +5,11 @@
 #include "expr.hpp"
 
 namespace eq {
+namespace detail {
 
-/// Register expression as relation
 template <typename E>
-void rel(E e)
+Domain& mergeDomains(E&& e)
 {
-	static_assert(isRelation<E>(), "Expression is not a relation");
 	auto&& ds= domains(e.getVars());
 	assert(!ds.empty() && "Domain not found");
 
@@ -22,10 +21,27 @@ void rel(E e)
 
 		preserved->merge(std::move(*d));
 	}
-
-	preserved->addRelation(e);
+	
+	return *preserved;
 }
 
+} // detail
+
+/// Register expression as relation
+template <typename E>
+void rel(E e)
+{
+	static_assert(isRelation<E>(), "Expression is not a relation");
+	detail::mergeDomains(e).addRelation(e);
+}
+
+/// Register expression as a soft relation
+template <typename E>
+void rel(E e, int priority)
+{
+	static_assert(isRelation<E>(), "Expression is not a relation");
+	detail::mergeDomains(e).addRelation(e, priority);
+}
 
 } // eq
 
