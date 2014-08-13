@@ -38,7 +38,7 @@ public:
 	const T& get() const { return value; }
 
 private:
-	T value;
+	T value= 0;
 };
 
 } // eq

@@ -35,20 +35,24 @@ constexpr bool isSame() { return std::is_same<T1, T2>::value; }
 #define ensure assert
 
 template <typename T>
-struct MethodPtr;
+struct FuncPtr;
 
 template <typename R, typename C, typename... Args>
-struct MethodPtr<R (C::*)(Args...)> {
+struct FuncPtr<R (C::*)(Args...)> {
 	using Return= R;
 };
 
 template <typename R, typename C, typename... Args>
-struct MethodPtr<R (C::*)(Args...) const> {
+struct FuncPtr<R (C::*)(Args...) const> {
 	using Return= R;
 };
 
+template <typename R, typename... Args>
+struct FuncPtr<R (*)(Args...)> {
+	using Return= R;
+};
 template <typename T>
-using Return= typename MethodPtr<T>::Return;
+using Return= typename FuncPtr<T>::Return;
 
 template <typename... Ts>
 Set<Ts...> operator+(Set<Ts...> lhs, const Set<Ts...>& rhs)

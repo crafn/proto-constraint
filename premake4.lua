@@ -17,18 +17,11 @@ solution "gecode_test"
     files { "./eq/**.hpp", "./eq/**.def",
             "./eq/**.cpp", "./eq/**.tpp" }
 
-    includedirs { "./eq/" }
+    includedirs { "./eq/", "./deps/or-tools/include/" }
+	libdirs { "./deps/or-tools/lib/" }
     vpaths { ["*"] = "./eq/**" }
 
-    links { "gecodeminimodel",
-			"gecodedriver",
-			"gecodegist",
-			"gecodesearch",
-			"gecodeset",
-			"gecodefloat",
-			"gecodeint",
-			"gecodekernel",
-			"gecodesupport",
+    links { "ortools",
 			"stdc++" }
 	buildoptions { "-std=c++11" }
 
