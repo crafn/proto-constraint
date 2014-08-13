@@ -19,3 +19,13 @@
 *.exe
 *.out
 *.app
+
+# Temp/backup
+*.swp
+*~
+
+# Build
+/Makefile
+/app.make
+/debug
+/obj
