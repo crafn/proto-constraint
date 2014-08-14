@@ -7,6 +7,8 @@
 
 namespace eq {
 
+using PriorityVar= Var<int>;
+
 class Domain : public std::enable_shared_from_this<Domain> {
 public:
 
@@ -36,17 +38,24 @@ public:
 		dirty= true;
 	}
 
-	template <typename T>
-	void addRelation(Expr<T> rel, int priority)
+	template <typename T1, typename T2>
+	void addRelation(Expr<T1> rel, Var<T2>& priority)
 	{
-		addRelations.push_back([rel, priority] (Domain& d, Solver& solver)
-		{ solver.addRelation(rel, priority); });
+		static_assert(isSame<Var<T2>, PriorityVar>(),
+				"Second parameter must be of type eq::PriorityVar");
+
+		addRelations.push_back([rel, &priority] (Domain& d, Solver& solver)
+		{
+			// This will solve priority domain
+			solver.addRelation(rel, priority);
+		});
 		dirty= true;
 	}
 
 	void solve()
 	{
 		assert(dirty);
+
 		Solver solver;
 
 		for (auto&& pair : addVars) {
@@ -73,7 +82,6 @@ public:
 		addVars= addVars + other.addVars;
 		addRelations= addRelations + other.addRelations;
 		dirty= true;
-
 		other.clear();
 	}
 
@@ -97,7 +105,7 @@ private:
 	DynArray<AddRelation> addRelations;
 	Map<const BaseVar*, AddVar> addVars;
 
-	/// Solution is not up-to-date
+	/// Is solution up-to-date
 	bool dirty= false;
 };
 

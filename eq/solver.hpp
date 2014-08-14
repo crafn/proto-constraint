@@ -33,19 +33,20 @@ struct MakeRel {
 
 class Priority {
 public:
-	static Priority makeHard() { return Priority{hardPriority}; }
+	static Priority makeHard() { return Priority{}; }
 
-	Priority(int p)
-		: p(p) { }
+	Priority(int value)
+		: value_(value) { }
 	
-	bool hard() const { return p == hardPriority; }
-	int getValue() const { return p; }
+	bool hard() const { return hard_; }
+	int value() const { assert(!hard()); return value_; }
 
 private:
-	static constexpr int hardPriority= -10000;
+	Priority()
+		: hard_(true) { }
 
-	/// @todo Replace with op::IntVar
-	int p= hardPriority;
+	int value_= 0;
+	bool hard_= false;
 };
 
 } // detail
@@ -79,20 +80,20 @@ public:
 		auto optimizer= solver.MakeMaximize(success_amount, 1);
 
 		std::vector<op::IntVar*> vars;
-		for (auto&& m : intVars) {
-			vars.push_back(m.model);
+		for (auto&& v : intVars) {
+			vars.push_back(v.model);
 		}
 		auto db= solver.MakePhase(vars, op::Solver::CHOOSE_FIRST_UNBOUND, op::Solver::ASSIGN_CENTER_VALUE);
-		solver.NewSearch(db, optimizer);
 
+		solver.NewSearch(db, optimizer);
 		if (solver.NextSolution()) {
 			// Apparently last solution is the one which has the best success amount
 			do {
-				// Update solution to actual variables
-				for (auto&& var : intVars) {
-					assert(var.actual && var.model);
-					*var.actual= var.model->Value();
-					//std::cout << "Solution: " << var.model->Value() << std::endl;
+				// Apply solution to actual variables
+				for (auto&& v : intVars) {
+					assert(v.actual && v.model);
+					*v.actual= v.model->Value();
+					//std::cout << "Solution: " << v.model->Value() << std::endl;
 				}
 			} while (solver.NextSolution());
 		} else {
@@ -137,6 +138,18 @@ private:
 		throw std::runtime_error{"var not found"};
 	}
 
+	void tryEraseVarInfo(const int& ref)
+	{
+		auto it= std::find_if(intVars.begin(), intVars.end(),
+			[&ref] (const VarInfo<int>& info)
+			{
+				return info.actual == &ref;
+			});
+
+		if (it != intVars.end())
+			intVars.erase(it);
+	}
+
 	/// @todo Simplify expression trees so that unsupported operations vanish
 	/// @todo Check if IntExpr::Var() calls could be omitted
 	/// Creates solver constraints matching to expression
@@ -151,7 +164,7 @@ private:
 	{
 		assert(!p.hard());
 		assert(success);
-		auto prod= solver.MakeProd(success, p.getValue())->Var();
+		auto prod= solver.MakeProd(success, p.value())->Var();
 		successAmounts.push_back(prod);
 	}
 

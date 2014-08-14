@@ -12,7 +12,7 @@ Domain& mergeDomains(E&& e)
 {
 	auto&& ds= domains(e.getVars());
 	assert(!ds.empty() && "Domain not found");
-
+	
 	auto preserved= *ds.begin();
 	// Merge all domains which take part in the relation
 	for (auto&& d : ds) {
@@ -21,7 +21,7 @@ Domain& mergeDomains(E&& e)
 
 		preserved->merge(std::move(*d));
 	}
-	
+
 	return *preserved;
 }
 
@@ -37,7 +37,7 @@ void rel(E e)
 
 /// Register expression as a soft relation
 template <typename E>
-void rel(E e, int priority)
+void rel(E e, PriorityVar& priority)
 {
 	static_assert(isRelation<E>(), "Expression is not a relation");
 	detail::mergeDomains(e).addRelation(e, priority);
