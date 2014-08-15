@@ -24,7 +24,6 @@ Another example:
 
 Missing features:
 
-- priorization (= soft constraints)
 - copy & move for `eq::Var<T>`
 - support for floating point values
 - support for user-defined types
