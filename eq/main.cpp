@@ -43,16 +43,27 @@ int main()
 
 	{
 		eq::PriorityVar low, high;
-		eq::rel(high > low);
-		//std::cout << "low " << low << ", high " << high << std::endl;
+		rel(high > low);
 
 		eq::Var<int> x, y;
 		
-		eq::rel(x > 0, low);
-		eq::rel(x < 10, high);
-		eq::rel(x*x == 12*12);
-		eq::rel(y == 2*x, low);
+		rel(x > 0, low);
+		rel(x < 10, high);
+		rel(x*x == 12*12);
+		rel(y == 2*x, low);
 
 		std::cout << x << ", " << y << std::endl;
+	}
+
+	{
+		eq::PriorityVar low, med, high;
+		rel(low < med && med < high);
+
+		eq::Var<int> x;
+		rel(x == 1, high);
+		rel(x == 2, med);
+		rel(x == 3, low);
+
+		std::cout << x << std::endl;
 	}
 }
