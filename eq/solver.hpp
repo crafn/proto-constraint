@@ -193,9 +193,9 @@ struct MakeRel<Expr<T>> {
 	}
 };
 
-template <typename T>
-struct MakeRel<Var<T>> {
-	static op::IntVar* eval(Solver& self, Var<T>& v, Priority p)
+template <typename T, VarType type>
+struct MakeRel<Var<T, type>> {
+	static op::IntVar* eval(Solver& self, Var<T, type>& v, Priority p)
 	{
 		return self.getVarInfo(v.get()).model;
 	}

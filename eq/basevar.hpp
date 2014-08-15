@@ -8,8 +8,14 @@ namespace eq {
 class Domain;
 using DomainPtr= SharedPtr<Domain>;
 
-template <typename T>
+enum class VarType {
+	normal,
+	priority
+};
+
+template <typename T, VarType type>
 class Var;
+using PriorityVar= Var<int, VarType::priority>;
 
 class BaseVar {
 public:

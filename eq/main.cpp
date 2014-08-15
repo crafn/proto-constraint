@@ -43,15 +43,15 @@ int main()
 
 	{
 		eq::PriorityVar low, high;
-		eq::rel(low > 0 && high > low);
-		std::cout << "low " << low << ", high " << high << std::endl;
+		eq::rel(high > low);
+		//std::cout << "low " << low << ", high " << high << std::endl;
 
 		eq::Var<int> x, y;
 		
 		eq::rel(x > 0, low);
 		eq::rel(x < 10, high);
 		eq::rel(x*x == 12*12);
-		//eq::rel(y == 2*x, low);
+		eq::rel(y == 2*x, low);
 
 		std::cout << x << ", " << y << std::endl;
 	}

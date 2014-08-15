@@ -1,13 +1,10 @@
 #ifndef EQ_EXPR_HPP
 #define EQ_EXPR_HPP
 
+#include "basevar.hpp"
 #include "util.hpp"
 
 namespace eq {
-
-class BaseVar;
-template <typename T>
-class Var;
 
 template <typename T>
 struct Expr {
@@ -29,20 +26,20 @@ public:
 
 };
 
-template <typename T>
-struct Expr<Var<T>> {
-	Expr(Var<T>& value)
+template <typename T, VarType type>
+struct Expr<Var<T, type>> {
+	Expr(Var<T, type>& value)
 		: value(&value)
 	{ }
 
-	Var<T>& get() { return *value; }
+	Var<T, type>& get() { return *value; }
 
 	Set<BaseVar*> getVars() const { return {value}; }
 
 	T eval() const { return value->get(); }
 
 private:
-	Var<T>* value;
+	Var<T, type>* value;
 };
 
 template <typename T>
@@ -105,8 +102,8 @@ struct IsExpr<Expr<T>> { static constexpr bool value= true; };
 template <typename T>
 struct IsVar { static constexpr bool value= false; };
 
-template <typename T>
-struct IsVar<Var<T>> { static constexpr bool value= true; };
+template <typename T, VarType type>
+struct IsVar<Var<T, type>> { static constexpr bool value= true; };
 
 /// @todo Simplify
 

@@ -7,23 +7,25 @@
 
 namespace eq {
 
-using PriorityVar= Var<int>;
-
 class Domain : public std::enable_shared_from_this<Domain> {
 public:
 
-	template <typename T>
-	void addVar(Var<T>& v)
+	template <typename T, VarType type>
+	void addVar(Var<T, type>& v)
 	{
-		Var<T>* ptr= &v;
+		Var<T, type>* ptr= &v;
 		vars.push_back(ptr);
 		addVars[ptr]= [ptr] (Domain& d, Solver& solver)
 		{ solver.addVar(ptr->get()); };
+
+		if (type == VarType::priority)
+			addRelation(v > 0);
+
 		dirty= true;
 	}
 
-	template <typename T>
-	void removeVar(const Var<T>& v)
+	template <typename T, VarType type>
+	void removeVar(const Var<T, type>& v)
 	{
 		eraseFrom(vars, &v);
 		eraseFrom(addVars, &v);
@@ -39,11 +41,8 @@ public:
 	}
 
 	template <typename T1, typename T2>
-	void addRelation(Expr<T1> rel, Var<T2>& priority)
+	void addRelation(Expr<T1> rel, Var<T2, VarType::priority>& priority)
 	{
-		static_assert(isSame<Var<T2>, PriorityVar>(),
-				"Second parameter must be of type eq::PriorityVar");
-
 		addRelations.push_back([rel, &priority] (Domain& d, Solver& solver)
 		{
 			// This will solve priority domain

@@ -7,7 +7,7 @@
 namespace eq {
 
 /// Variable that has value determined by constraints
-template <typename T>
+template <typename T, VarType type= VarType::normal>
 class Var : public BaseVar {
 public:
 
