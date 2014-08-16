@@ -27,6 +27,7 @@ public:
 				handle,
 				[handle] (Domain& d, Solver& solver)
 				{
+					ensure(handle && "Invalid eq::Var handle");
 					Var<T, type>& var= static_cast<Var<T, type>&>(handle.get());
 					solver.addVar(var.get());
 				}
@@ -40,12 +41,40 @@ public:
 		dirty= true;
 	}
 
+	/// Removes `var` from domain and all relations where `var` is present
+	/// Doesn't need to be called on move because handles are smart
+	void removeVar(BaseVar& var)
+	{
+		eraseIf(varInfos,
+			[&var] (const VarInfo& info)
+			{ return &info.handle.get() == &var; }); 
+
+		eraseIf(relInfos,
+			[&var] (const RelInfo& info)
+			{
+				for (auto&& h : info.vars) {
+					if (&h.get() == &var)
+						return true;
+				}
+				return false;
+			});
+
+		/// @todo Not always necessary
+		dirty= true;
+	}
+
 	template <typename T>
 	void addRelation(Expr<T> rel)
 	{
-		/// @todo Remove relation when var is deleted
-		addRelations.push_back([rel] (Domain& d, Solver& solver)
-		{ solver.addRelation(rel); });
+		relInfos.emplace_back(
+			RelInfo{
+				asHandles(rel.getVars()),
+				[rel] (Domain& d, Solver& solver)
+				{
+					solver.addRelation(rel);
+				}
+			}
+		);
 		dirty= true;
 	}
 
@@ -53,14 +82,19 @@ public:
 	void addRelation(Expr<T1> rel, Var<T2, VarType::priority>& priority)
 	{
 		VarHandle priority_h{priority};
-		addRelations.push_back([rel, priority_h] (Domain& d, Solver& solver)
-		{
-			ensure(priority_h && "eq::PriorityVar is destroyed/moved even though its in use");
-			Var<T2, VarType::priority>& p=
-				static_cast<Var<T2, VarType::priority>&>(priority_h.get());
-			// This will solve priority domain
-			solver.addRelation(rel, p);
-		});
+		relInfos.emplace_back(
+			RelInfo {
+				asHandles(rel.getVars()),
+				[rel, priority_h] (Domain& d, Solver& solver)
+				{
+					ensure(priority_h && "eq::PriorityVar has been destroyed");
+					Var<T2, VarType::priority>& p=
+						static_cast<Var<T2, VarType::priority>&>(priority_h.get());
+					// This will solve priority domain
+					solver.addRelation(rel, p);
+				}
+			}
+		);
 		dirty= true;
 	}
 
@@ -69,13 +103,11 @@ public:
 		if (!dirty)
 			return;
 
-		removeDecayed();
-
 		Solver solver;
 		for (auto&& info : varInfos)
 			info.post(*this, solver);
-		for (auto&& post : addRelations)
-			post(*this, solver);
+		for (auto&& info : relInfos)
+			info.post(*this, solver);
 		solver.apply();
 
 		dirty= false;
@@ -89,7 +121,7 @@ public:
 		for (auto&& info : other.varInfos)
 			info.handle->setDomainPtr(shared_from_this());
 	
-		addRelations= addRelations + other.addRelations;
+		relInfos= relInfos + other.relInfos;
 	
 		dirty= true;
 		other.clear();
@@ -98,25 +130,12 @@ public:
 	void clear()
 	{
 		varInfos.clear();
-		addRelations.clear();
+		relInfos.clear();
 		dirty= false;
 	}
 
 private:
-	bool removeDecayed()
-	{
-		auto size_before= varInfos.size();
-
-		eraseIf(varInfos,
-			[] (const VarInfo& info) -> bool
-			{
-				return info.handle.isNull();
-			});
-
-		return size_before - varInfos.size() > 0;
-	}
-
-	using AddRelation= std::function<void (Domain& d, Solver& solver)>;
+	using AddRel= std::function<void (Domain& d, Solver& solver)>;
 	using AddVar= std::function<void (Domain& d, Solver& solver)>;
 
 	struct VarInfo {
@@ -124,9 +143,24 @@ private:
 		AddVar post;
 	};
 
+	struct RelInfo {
+		DynArray<VarHandle> vars;
+		/// Quick and easy way to save posted relations for future reposting
+		AddRel post;
+	};
+
+	DynArray<VarHandle> asHandles(const Set<BaseVar*>& container)
+	{
+		DynArray<VarHandle> var_handles;
+		for (auto&& ptr : container) {
+			ensure(ptr);
+			var_handles.emplace_back(*ptr);
+		}
+		return var_handles;
+	}
+
 	DynArray<VarInfo> varInfos;
-	/// Quick and easy way to save posted relations for future reposting
-	DynArray<AddRelation> addRelations;
+	DynArray<RelInfo> relInfos;
 
 	/// Is solution up-to-date
 	bool dirty= false;

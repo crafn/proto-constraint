@@ -18,6 +18,12 @@ public:
 		domain->addVar(*this);
 	}
 
+	~Var()
+	{
+		if (domain)
+			domain->removeVar(*this);
+	}
+
 	Var(const Var&)= default;
 	Var(Var&&)= default;
 	Var& operator=(const Var&)= default;
@@ -32,6 +38,12 @@ public:
 	/// @todo These could be private
 	T& get() { return value; }
 	const T& get() const { return value; }
+
+	void clear()
+	{
+		getDomain().removeVar(*this);
+		getDomain().addVar(*this);
+	}
 
 private:
 	T value= 0;

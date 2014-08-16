@@ -13,14 +13,14 @@ public:
 		eq::rel(height() >= 0);
 	}
 
-	eq::Var<int>& top() { return m_top; }
-	eq::Var<int>& bottom() { return m_bottom; }
+	eq::Var<int>& top() { return top_; }
+	eq::Var<int>& bottom() { return bottom_; }
 
 	auto height() -> decltype(top() - bottom()) { return top() - bottom(); }
 
 private:
-	eq::Var<int> m_top;
-	eq::Var<int> m_bottom;
+	eq::Var<int> top_;
+	eq::Var<int> bottom_;
 };
 
 } // gui
@@ -64,8 +64,19 @@ int main()
 		rel(x == 2, med);
 		rel(x == 3, low);
 
-		//eq::Var<int> y= std::move(x);
+		eq::Var<int> y= std::move(x);
+		std::cout << y << std::endl;
+	}
 
-		std::cout << x << std::endl;
+	{
+		eq::PriorityVar init;
+
+		eq::Var<int> a, b;
+
+		rel(b == 1337, init);
+		rel(a == 1 && b == 2);
+		
+		a.clear();
+		std::cout << b << std::endl; // 1337
 	}
 }
