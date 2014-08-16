@@ -39,7 +39,7 @@ public:
 		: value_(value) { }
 	
 	bool hard() const { return hard_; }
-	int value() const { assert(!hard()); return value_; }
+	int value() const { ensure(!hard()); return value_; }
 
 private:
 	Priority()
@@ -91,7 +91,7 @@ public:
 			do {
 				// Apply solution to actual variables
 				for (auto&& v : intVars) {
-					assert(v.actual && v.model);
+					ensure(v.actual && v.model);
 					*v.actual= v.model->Value();
 					//std::cout << "Solution: " << v.model->Value() << std::endl;
 				}
@@ -162,8 +162,8 @@ private:
 
 	void addSuccessVar(op::IntVar* success, detail::Priority p)
 	{
-		assert(!p.hard());
-		assert(success);
+		ensure(!p.hard());
+		ensure(success);
 		auto prod= solver.MakeProd(success, p.value())->Var();
 		successAmounts.push_back(prod);
 	}

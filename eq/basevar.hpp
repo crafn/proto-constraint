@@ -7,6 +7,7 @@ namespace eq {
 
 class Domain;
 using DomainPtr= SharedPtr<Domain>;
+class VarHandle;
 
 enum class VarType {
 	normal,
@@ -19,6 +20,14 @@ using PriorityVar= Var<int, VarType::priority>;
 
 class BaseVar {
 public:
+	BaseVar()= default;
+	~BaseVar();
+	BaseVar(const BaseVar&)= delete;
+	BaseVar(BaseVar&& other);
+
+	/// @todo Figure out how copy semantics should work with relations
+	BaseVar& operator=(const BaseVar& other)= delete;
+	BaseVar& operator=(BaseVar&& other);
 
 	/// @todo These could be protected
 	Domain& getDomain() const { return *domain; }
@@ -26,7 +35,11 @@ public:
 	DomainPtr getDomainPtr() { return domain; }
 
 protected:
+	friend class VarHandle;
+
 	DomainPtr domain;
+	/// Handles to this
+	DynArray<VarHandle*> handles;
 };
 
 } // eq

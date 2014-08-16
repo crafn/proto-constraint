@@ -18,18 +18,14 @@ public:
 		domain->addVar(*this);
 	}
 
-	~Var()
-	{
-		domain->removeVar(*this);
-	}
-
-	Var(const Var&)= delete; /// @todo
-	Var(Var&&)= delete; /// @todo
+	Var(const Var&)= default;
+	Var(Var&&)= default;
+	Var& operator=(const Var&)= default;
+	Var& operator=(Var&&)= default;
 
 	operator const T&() const
 	{
-		if (getDomain().isDirty())
-			getDomain().solve();
+		getDomain().solve();
 		return value;
 	}
 

@@ -11,7 +11,7 @@ template <typename E>
 Domain& mergeDomains(E&& e)
 {
 	auto&& ds= domains(e.getVars());
-	assert(!ds.empty() && "Domain not found");
+	ensure(!ds.empty() && "Domain not found");
 	
 	auto preserved= *ds.begin();
 	// Merge all domains which take part in the relation

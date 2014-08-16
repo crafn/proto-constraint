@@ -3,6 +3,7 @@
 
 #include "basevar.hpp"
 #include "util.hpp"
+#include "varhandle.hpp"
 
 namespace eq {
 
@@ -29,17 +30,17 @@ public:
 template <typename T, VarType type>
 struct Expr<Var<T, type>> {
 	Expr(Var<T, type>& value)
-		: value(&value)
+		: handle(value)
 	{ }
 
-	Var<T, type>& get() { return *value; }
+	Var<T, type>& get() { return static_cast<Var<T, type>&>(handle.get()); }
 
-	Set<BaseVar*> getVars() const { return {value}; }
+	Set<BaseVar*> getVars() const { return {&handle.get()}; }
 
-	T eval() const { return value->get(); }
+	T eval() const { return get(); }
 
 private:
-	Var<T, type>* value;
+	VarHandle handle;
 };
 
 template <typename T>
@@ -136,7 +137,7 @@ struct ToExpr<int> {
 };
 
 template <>
-struct ToExpr<const int> {
+struct ToExpr<const int&> {
 	static Expr<Constant<int>> eval(int t)
 	{ return Expr<Constant<int>>{t}; }
 };
@@ -154,7 +155,7 @@ struct ToExpr<bool> {
 };
 
 template <>
-struct ToExpr<const bool> {
+struct ToExpr<const bool&> {
 	static Expr<Constant<int>> eval(int t)
 	{ return Expr<Constant<int>>{t}; }
 };

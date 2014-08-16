@@ -64,6 +64,8 @@ int main()
 		rel(x == 2, med);
 		rel(x == 3, low);
 
+		//eq::Var<int> y= std::move(x);
+
 		std::cout << x << std::endl;
 	}
 }
