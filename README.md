@@ -24,7 +24,7 @@ Another example:
 
 Missing features:
 
-- copy & move for `eq::Var<T>`
+- copy for `eq::Var<T>`
 - support for floating point values
 - support for user-defined types
 - support for user-defined operators/functions
