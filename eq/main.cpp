@@ -90,6 +90,36 @@ public:
 	{
 		for (int y= bottom(); y < top(); ++y) {
 			for (int x= left(); x < right(); ++x) {
+
+				int v= 0, h= 0;
+
+				if (x == left())
+					v= -1;
+				else if (x == right() - 1)
+					v= 1;
+
+				if (y == bottom())
+					h= -1;
+				else if (y == top() - 1)
+					h= 1;
+
+				char ch= ' ';
+				if (!v && !h) {
+					ch= bgChar;
+				}
+				else if (v && !h) {
+					ch= '|';
+				}
+				else if (!v && h) {
+					ch= '~';
+				}
+				else {
+					if (v*h > 0)
+						ch= '\\';
+					else
+						ch= '/';
+				}
+				
 				s.set(x, y, ch);
 			}
 		}
@@ -103,10 +133,10 @@ private:
 
 	eq::Var<int> right_, top_, left_, bottom_;
 	std::vector<Box*> subBoxes;
-	char ch= nextCh;
+	char bgChar= nextCh;
 };
 
-char Box::nextCh= '+';
+char Box::nextCh= '*';
 
 } // gui
 
