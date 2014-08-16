@@ -33,7 +33,7 @@ struct Expr<Var<T, type>> {
 		: handle(value)
 	{ }
 
-	Var<T, type>& get() { return static_cast<Var<T, type>&>(handle.get()); }
+	Var<T, type>& get() const { return static_cast<Var<T, type>&>(handle.get()); }
 
 	Set<BaseVar*> getVars() const { return {&handle.get()}; }
 

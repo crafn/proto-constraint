@@ -5,40 +5,130 @@
 
 namespace gui {
 
+class Screen {
+public:
+
+	Screen(size_t size_x, size_t size_y)
+		: sizeX(size_x)
+		, sizeY(size_y)
+		, chars(sizeX*sizeY, ' ')
+	{ }
+
+	void set(int x, int y, char c)
+	{
+		ensure(x >= 0 && y >= 0 && x < sizeX && y < sizeY);
+		// Upside down
+		size_t index= x + (sizeY - y - 1)*sizeX;
+		ensure(index < chars.size());
+		chars[index]= c;
+	}
+
+	void draw()
+	{
+		size_t x= 0;
+		for (auto&& c : chars)
+		{
+			if (x == sizeX) {
+				std::cout << "\n";
+				x= 0;
+			}
+
+			std::cout << c;
+			++x;
+		}
+		std::cout << "\n";
+	}
+
+private:
+	size_t sizeX, sizeY;
+	std::vector<char> chars;
+};
+
 class Box {
 public:
 
 	Box()
 	{
-		eq::rel(height() >= 0);
+		rel(height() >= 0 && width() >= 0);
+		++nextCh;
 	}
 
+	/// @todo Const?
+	eq::Var<int>& right() { return right_; }
 	eq::Var<int>& top() { return top_; }
+	eq::Var<int>& left() { return left_; }
 	eq::Var<int>& bottom() { return bottom_; }
 
 	auto height() -> decltype(top() - bottom()) { return top() - bottom(); }
+	auto width() -> decltype(right() - left()) { return right() - left(); }
+
+	template <typename T>
+	auto contains(T& other) /// @todo Should have const (?)
+	-> decltype(other.right() <= right() &&
+				other.top() <= top() &&
+				other.left() >= left() &&
+				other.bottom() >= bottom())
+	{
+		return	other.right() <= right() &&
+				other.top() <= top() &&
+				other.left() >= left() &&
+				other.bottom() >= bottom();
+	}
+
+	void add(Box& box)
+	{
+		rel(contains(box));
+		subBoxes.push_back(&box);
+	}
+
+	void set(int x, int y, int w, int h)
+	{
+		rel(left() == x && bottom() == y && width() == w && height() == h);
+	}
+
+	void draw(Screen& s) /// @todo Should have const
+	{
+		for (int y= bottom(); y < top(); ++y) {
+			for (int x= left(); x < right(); ++x) {
+				s.set(x, y, ch);
+			}
+		}
+
+		for (Box* b : subBoxes)
+			b->draw(s);
+	}
 
 private:
-	eq::Var<int> top_;
-	eq::Var<int> bottom_;
+	static char nextCh;
+
+	eq::Var<int> right_, top_, left_, bottom_;
+	std::vector<Box*> subBoxes;
+	char ch= nextCh;
 };
 
-} // gui
+char Box::nextCh= '+';
 
-std::ostream& operator<< (std::ostream& stream, gui::Box& box)
-{
-	stream << "top: " << box.top() << ", bottom: " << box.bottom();
-}
+} // gui
 
 int main()
 {
 	{
-		gui::Box box1, box2;
-		rel(box1.top() == 30 && box2.bottom() == 0);
-		rel(box1.bottom() == box2.top() && box1.height() == box2.height());
+		gui::Screen screen{30, 30};
+		gui::Box a, b, c;
 
-		std::cout << "box1 " << box1 << std::endl;
-		std::cout << "box2 " << box2 << std::endl;
+		a.set(0, 0, 30, 30);
+
+		a.add(b);
+		a.add(c);
+		rel(	b.bottom() == a.bottom() &&
+				b.bottom() == c.bottom() && 
+				b.width() + c.width() == a.width() && 
+				b.right() == c.left() && 
+				b.height() == a.height()/2 &&
+				c.height() == a.height()/3);
+
+		a.draw(screen);
+		screen.draw();
 	}
 
 	{
@@ -70,13 +160,12 @@ int main()
 
 	{
 		eq::PriorityVar init;
-
 		eq::Var<int> a, b;
 
 		rel(b == 1337, init);
 		rel(a == 1 && b == 2);
-		
 		a.clear();
+
 		std::cout << b << std::endl; // 1337
 	}
 }
