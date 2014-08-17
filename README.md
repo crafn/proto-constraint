@@ -25,7 +25,6 @@ Another example:
 Missing features:
 
 - copy for `eq::Var<T>`
-- const semantics
 - removing single relations
 - support for floating point values
 - support for user-defined types

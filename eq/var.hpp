@@ -35,18 +35,26 @@ public:
 		return value;
 	}
 
-	/// @todo These could be private
-	T& get() { return value; }
-	const T& get() const { return value; }
-
 	void clear()
 	{
 		getDomain().removeVar(*this);
 		getDomain().addVar(*this);
 	}
 
+	/// @todo Could be private
+	T& get() const { return value; }
+
 private:
-	T value= 0;
+	/// Consider:
+	///	  auto area() const { return width*height; } // Expr of const Vars
+	/// It should be possible to use this in the following contexts:
+	///	  if (obj.area() > 5) { ... } // Works
+	///   rel(x == obj.area()); // Fails because of const members in Vars
+	/// -> const machinery of C++ is too limited for this use case so we need
+	/// to bypass it with mutable.
+	/// This is probably not so bad because we aren't trying to represent
+	/// conventional state, but a handle to mathematical entity
+	mutable T value= 0;
 };
 
 } // eq

@@ -53,21 +53,19 @@ public:
 		++nextCh;
 	}
 
-	/// @todo Const?
-	eq::Var<int>& right() { return right_; }
-	eq::Var<int>& top() { return top_; }
-	eq::Var<int>& left() { return left_; }
-	eq::Var<int>& bottom() { return bottom_; }
+	const eq::Var<int>& right() const { return right_; }
+	const eq::Var<int>& top() const { return top_; }
+	const eq::Var<int>& left() const { return left_; }
+	const eq::Var<int>& bottom() const { return bottom_; }
 
-	auto height() -> decltype(top() - bottom()) { return top() - bottom(); }
-	auto width() -> decltype(right() - left()) { return right() - left(); }
+	auto height() const -> decltype(top() - bottom()) { return top() - bottom(); }
+	auto width() const -> decltype(right() - left()) { return right() - left(); }
 
-	template <typename T>
-	auto contains(T& other) /// @todo Should have const (?)
-	-> decltype(other.right() <= right() &&
-				other.top() <= top() &&
-				other.left() >= left() &&
-				other.bottom() >= bottom())
+	auto contains(const Box& other) const
+	-> decltype(right() <= right() && // Waiting for C++14...
+				top() <= top() &&
+				left() >= left() &&
+				bottom() >= bottom())
 	{
 		return	other.right() <= right() &&
 				other.top() <= top() &&
@@ -86,7 +84,7 @@ public:
 		rel(left() == x && bottom() == y && width() == w && height() == h);
 	}
 
-	void draw(Screen& s) /// @todo Should have const
+	void draw(Screen& s) const
 	{
 		for (int y= bottom(); y < top(); ++y) {
 			for (int x= left(); x < right(); ++x) {
@@ -136,7 +134,7 @@ private:
 	char bgChar= nextCh;
 };
 
-char Box::nextCh= '*';
+char Box::nextCh= '+';
 
 } // gui
 
@@ -149,13 +147,16 @@ int main()
 		a.set(0, 0, 30, 30);
 
 		a.add(b);
-		a.add(c);
 		rel(	b.bottom() == a.bottom() &&
-				b.bottom() == c.bottom() && 
-				b.width() + c.width() == a.width() && 
-				b.right() == c.left() && 
-				b.height() == a.height()/2 &&
-				c.height() == a.height()/3);
+				b.left() == a.left() &&
+				b.height() == a.height()*2/3);
+
+		a.add(c);
+		rel(	c.top() == a.top() &&
+				c.right() == a.right()  &&
+				c.height() == a.height()/2);
+
+		rel(b.width() == c.width());
 
 		a.draw(screen);
 		screen.draw();

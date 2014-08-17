@@ -34,9 +34,7 @@ struct Expr<Var<T, type>> {
 	{ }
 
 	Var<T, type>& get() const { return static_cast<Var<T, type>&>(handle.get()); }
-
 	Set<BaseVar*> getVars() const { return {&handle.get()}; }
-
 	T eval() const { return get(); }
 
 private:
@@ -110,14 +108,26 @@ struct IsVar<Var<T, type>> { static constexpr bool value= true; };
 
 template <typename T>
 struct ToExpr {
-	using PlainT= RemoveRef<RemoveConst<T>>;
+	using PlainT= RemoveConst<RemoveRef<T>>;
 	static Expr<PlainT> eval(T t) { return Expr<PlainT>{std::forward<T>(t)}; }
 };
 
 template <typename T>
 struct ToExpr<T&> {
-	using PlainT= RemoveRef<RemoveConst<T>>;
+	using PlainT= RemoveConst<RemoveRef<T>>;
 	static Expr<PlainT> eval(T& t) { return Expr<PlainT>{t}; }
+};
+
+template <typename T, VarType type>
+struct ToExpr<const Var<T, type>&> {
+	using Type= const Var<T, type>&;
+	using PlainT= RemoveConst<RemoveRef<Type>>;
+	static Expr<PlainT> eval(Type& t)
+	{
+		/// @todo Prevent instantiating const Var because it'll make this UB
+		/// @see Var::value for justification of const_cast
+		return Expr<PlainT>{const_cast<PlainT&>(t)};
+	}
 };
 
 template <typename T>
@@ -177,15 +187,15 @@ constexpr bool isVar() { return detail::IsVar<T>::value; }
 template <typename T_>
 constexpr bool isExprUOpQuality()
 {
-	using T= RemoveRef<RemoveConst<T_>>;
+	using T= RemoveConst<RemoveRef<T_>>;
 	return isExpr<T>() || isVar<T>();
 }
 
 template <typename T1_, typename T2_>
 constexpr bool isExprBiOpQuality()
 {
-	using T1= RemoveRef<RemoveConst<T1_>>;
-	using T2= RemoveRef<RemoveConst<T2_>>;
+	using T1= RemoveConst<RemoveRef<T1_>>;
+	using T2= RemoveConst<RemoveRef<T2_>>;
 	return isExpr<T1>() || isVar<T1>() || isExpr<T2>() || isVar<T2>();
 }
 
