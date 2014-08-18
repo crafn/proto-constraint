@@ -124,8 +124,16 @@ struct ToExpr<const Var<T, type>&> {
 	using PlainT= RemoveConst<RemoveRef<Type>>;
 	static Expr<PlainT> eval(Type& t)
 	{
+		/// Consider:
+		///	  auto area() const { return width*height; } // Expr of const Vars
+		/// It should be possible to use this in the following contexts:
+		///	  if (obj.area() > 5) { ... } // Works
+		///   rel(x == obj.area()); // Fails because of const members in Vars
+		/// -> const machinery of C++ is too limited for this use case so we need
+		/// to bypass it with const_cast.
+		/// This is probably not so bad because we aren't trying to represent
+		/// conventional state, but a handle to mathematical entity
 		/// @todo Prevent instantiating const Var because it'll make this UB
-		/// @see Var::value for justification of const_cast
 		return Expr<PlainT>{const_cast<PlainT&>(t)};
 	}
 };
