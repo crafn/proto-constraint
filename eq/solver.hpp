@@ -212,43 +212,43 @@ struct MakeRel<Constant<T>> {
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Add>> {
-	static op::IntVar* eval(Solver& self, BiOp<T1, T2, Add> op, Priority p)
+	static op::IntExpr* eval(Solver& self, BiOp<T1, T2, Add> op, Priority p)
 	{
 		return self.solver.MakeSum(	self.makeRel(op.lhs, p),
-									self.makeRel(op.rhs, p))->Var();
+									self.makeRel(op.rhs, p));
 	}
 };
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Sub>> {
-	static op::IntVar* eval(Solver& self, BiOp<T1, T2, Sub> op, Priority p)
+	static op::IntExpr* eval(Solver& self, BiOp<T1, T2, Sub> op, Priority p)
 	{
 		return self.solver.MakeDifference(	self.makeRel(op.lhs, p),
-											self.makeRel(op.rhs, p))->Var();
+											self.makeRel(op.rhs, p));
 	}
 };
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Mul>> {
-	static op::IntVar* eval(Solver& self, BiOp<T1, T2, Mul> op, Priority p)
+	static op::IntExpr* eval(Solver& self, BiOp<T1, T2, Mul> op, Priority p)
 	{
 		return self.solver.MakeProd(self.makeRel(op.lhs, p),
-									self.makeRel(op.rhs, p))->Var();
+									self.makeRel(op.rhs, p));
 	}
 };
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Div>> {
-	static op::IntVar* eval(Solver& self, BiOp<T1, T2, Div> op, Priority p)
+	static op::IntExpr* eval(Solver& self, BiOp<T1, T2, Div> op, Priority p)
 	{
 		return self.solver.MakeDiv(	self.makeRel(op.lhs, p),
-									self.makeRel(op.rhs, p))->Var();
+									self.makeRel(op.rhs, p));
 	}
 };
 
 template <typename T>
 struct MakeRel<UOp<T, Pos>> {
-	static op::IntVar* eval(Solver& self, UOp<T, Pos> op, Priority p)
+	static op::IntExpr* eval(Solver& self, UOp<T, Pos> op, Priority p)
 	{
 		return self.makeRel(op.e, p);
 	}
@@ -256,9 +256,9 @@ struct MakeRel<UOp<T, Pos>> {
 
 template <typename T>
 struct MakeRel<UOp<T, Neg>> {
-	static op::IntVar* eval(Solver& self, UOp<T, Neg> op, Priority p)
+	static op::IntExpr* eval(Solver& self, UOp<T, Neg> op, Priority p)
 	{
-		return self.solver.MakeOpposite(self.makeRel(op.e, p))->Var();
+		return self.solver.MakeOpposite(self.makeRel(op.e, p));
 	}
 };
 
