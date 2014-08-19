@@ -54,55 +54,19 @@ private:
 class Solver {
 public:
 
-	void addVar(int& ref)
-	{
-		intVars.emplace_back(&ref, solver.MakeIntVar(minInt, maxInt));
-	}
+	void addVar(int& ref);
 
 	template <typename T>
 	void addRelation(Expr<T> rel)
-	{
-		makeRel(rel, detail::Priority::makeHard());
-	}
+	{ makeRel(rel, detail::Priority::makeHard()); }
 
 	template <typename T>
 	void addRelation(Expr<T> rel, int priority)
-	{
-		makeRel(rel, detail::Priority{priority});
-	}
+	{ makeRel(rel, detail::Priority{priority}); }
 
 	/// Solve and apply results
 	/// @todo Make safe for sequential calls
-	void apply()
-	{
-		/// @todo Should undo this after solving
-		auto success_amount= solver.MakeSum(successAmounts)->Var();
-		auto optimizer= solver.MakeMaximize(success_amount, 1);
-
-		std::vector<op::IntVar*> vars;
-		for (auto&& v : intVars) {
-			vars.push_back(v.model);
-		}
-		auto db= solver.MakePhase(vars, op::Solver::CHOOSE_FIRST_UNBOUND, op::Solver::ASSIGN_CENTER_VALUE);
-
-		solver.NewSearch(db, optimizer);
-		if (solver.NextSolution()) {
-			// Apparently last solution is the one which has the best success amount
-			do {
-				// Apply solution to actual variables
-				for (auto&& v : intVars) {
-					ensure(v.actual && v.model);
-					*v.actual= v.model->Value();
-					//std::cout << "Solution: " << v.model->Value() << std::endl;
-				}
-			} while (solver.NextSolution());
-		} else {
-			/// @todo Throw
-			std::cout << "Solving error, failure count: " << solver.failures() << std::endl;
-		}
-		
-		solver.EndSearch();
-	}
+	void apply();
 
 private:
 	template <typename T>
@@ -128,27 +92,8 @@ private:
 		op::IntVar* model= nullptr;
 	};
 
-	VarInfo<int>& getVarInfo(const int& ref)
-	{
-		for (auto&& m : intVars) {
-			if (m.actual == &ref)
-				return m;
-		}
-
-		throw std::runtime_error{"var not found"};
-	}
-
-	void tryEraseVarInfo(const int& ref)
-	{
-		auto it= std::find_if(intVars.begin(), intVars.end(),
-			[&ref] (const VarInfo<int>& info)
-			{
-				return info.actual == &ref;
-			});
-
-		if (it != intVars.end())
-			intVars.erase(it);
-	}
+	VarInfo<int>& getVarInfo(const int& ref);
+	void tryEraseVarInfo(const int& ref);
 
 	/// @todo Simplify expression trees so that unsupported operations vanish
 	/// @todo Check if IntExpr::Var() calls could be omitted
@@ -156,17 +101,9 @@ private:
 	template <typename E>
 	auto makeRel(E&& t, detail::Priority p)
 	-> Return<decltype(&detail::MakeRel<RemoveRef<E>>::eval)>
-	{
-		return detail::MakeRel<RemoveRef<E>>::eval(*this, t, p);
-	}
+	{ return detail::MakeRel<RemoveRef<E>>::eval(*this, t, p); }
 
-	void addSuccessVar(op::IntVar* success, detail::Priority p)
-	{
-		ensure(!p.hard());
-		ensure(success);
-		auto prod= solver.MakeProd(success, p.value())->Var();
-		successAmounts.push_back(prod);
-	}
+	void addSuccessVar(op::IntVar* success, detail::Priority p);
 
 	// Completely arbitrary
 	/// @todo Remove limits
