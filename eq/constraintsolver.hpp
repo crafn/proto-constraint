@@ -1,5 +1,5 @@
-#ifndef EQ_SOLVER_HPP
-#define EQ_SOLVER_HPP
+#ifndef EQ_CONSTRAINTSOLVER_HPP
+#define EQ_CONSTRAINTSOLVER_HPP
 
 #include "expr.hpp"
 #include "util.hpp"
@@ -22,7 +22,7 @@
 
 namespace eq {
 namespace op= operations_research;
-class Solver;
+class ConstraintSolver;
 
 namespace detail {
 
@@ -51,7 +51,7 @@ private:
 
 } // detail
 
-class Solver {
+class ConstraintSolver {
 public:
 
 	void addVar(int& ref);
@@ -123,7 +123,7 @@ namespace detail {
 
 template <typename T>
 struct MakeRel<Expr<T>> {
-	static auto eval(Solver& self, Expr<T> e, Priority p)
+	static auto eval(ConstraintSolver& self, Expr<T> e, Priority p)
 	-> decltype(self.makeRel(e.get(), p))
 	{
 		return self.makeRel(e.get(), p);
@@ -132,7 +132,7 @@ struct MakeRel<Expr<T>> {
 
 template <typename T, VarType type>
 struct MakeRel<Var<T, type>> {
-	static op::IntVar* eval(Solver& self, Var<T, type>& v, Priority p)
+	static op::IntVar* eval(ConstraintSolver& self, Var<T, type>& v, Priority p)
 	{
 		return self.getVarInfo(v.get()).model;
 	}
@@ -140,7 +140,7 @@ struct MakeRel<Var<T, type>> {
 
 template <typename T>
 struct MakeRel<Constant<T>> {
-	static op::IntVar* eval(Solver& self, Constant<T> v, Priority p)
+	static op::IntVar* eval(ConstraintSolver& self, Constant<T> v, Priority p)
 	{
 		/// @todo Not sure if leaks
 		return self.solver.MakeIntConst(v.get());
@@ -149,7 +149,7 @@ struct MakeRel<Constant<T>> {
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Add>> {
-	static op::IntExpr* eval(Solver& self, BiOp<T1, T2, Add> op, Priority p)
+	static op::IntExpr* eval(ConstraintSolver& self, BiOp<T1, T2, Add> op, Priority p)
 	{
 		return self.solver.MakeSum(	self.makeRel(op.lhs, p),
 									self.makeRel(op.rhs, p));
@@ -158,7 +158,7 @@ struct MakeRel<BiOp<T1, T2, Add>> {
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Sub>> {
-	static op::IntExpr* eval(Solver& self, BiOp<T1, T2, Sub> op, Priority p)
+	static op::IntExpr* eval(ConstraintSolver& self, BiOp<T1, T2, Sub> op, Priority p)
 	{
 		return self.solver.MakeDifference(	self.makeRel(op.lhs, p),
 											self.makeRel(op.rhs, p));
@@ -167,7 +167,7 @@ struct MakeRel<BiOp<T1, T2, Sub>> {
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Mul>> {
-	static op::IntExpr* eval(Solver& self, BiOp<T1, T2, Mul> op, Priority p)
+	static op::IntExpr* eval(ConstraintSolver& self, BiOp<T1, T2, Mul> op, Priority p)
 	{
 		return self.solver.MakeProd(self.makeRel(op.lhs, p),
 									self.makeRel(op.rhs, p));
@@ -176,7 +176,7 @@ struct MakeRel<BiOp<T1, T2, Mul>> {
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Div>> {
-	static op::IntExpr* eval(Solver& self, BiOp<T1, T2, Div> op, Priority p)
+	static op::IntExpr* eval(ConstraintSolver& self, BiOp<T1, T2, Div> op, Priority p)
 	{
 		return self.solver.MakeDiv(	self.makeRel(op.lhs, p),
 									self.makeRel(op.rhs, p));
@@ -185,7 +185,7 @@ struct MakeRel<BiOp<T1, T2, Div>> {
 
 template <typename T>
 struct MakeRel<UOp<T, Pos>> {
-	static op::IntExpr* eval(Solver& self, UOp<T, Pos> op, Priority p)
+	static op::IntExpr* eval(ConstraintSolver& self, UOp<T, Pos> op, Priority p)
 	{
 		return self.makeRel(op.e, p);
 	}
@@ -193,7 +193,7 @@ struct MakeRel<UOp<T, Pos>> {
 
 template <typename T>
 struct MakeRel<UOp<T, Neg>> {
-	static op::IntExpr* eval(Solver& self, UOp<T, Neg> op, Priority p)
+	static op::IntExpr* eval(ConstraintSolver& self, UOp<T, Neg> op, Priority p)
 	{
 		return self.solver.MakeOpposite(self.makeRel(op.e, p));
 	}
@@ -201,7 +201,7 @@ struct MakeRel<UOp<T, Neg>> {
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Eq>> {
-	static void eval(Solver& self, BiOp<T1, T2, Eq> op, Priority p)
+	static void eval(ConstraintSolver& self, BiOp<T1, T2, Eq> op, Priority p)
 	{
 		if (p.hard()) {
 			auto cst= self.solver.MakeEquality(	self.makeRel(op.lhs, p),
@@ -218,7 +218,7 @@ struct MakeRel<BiOp<T1, T2, Eq>> {
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Neq>> {
-	static void eval(Solver& self, BiOp<T1, T2, Neq> op, Priority p)
+	static void eval(ConstraintSolver& self, BiOp<T1, T2, Neq> op, Priority p)
 	{
 		if (p.hard()) {
 			auto constraint= self.solver.MakeNonEquality(	self.makeRel(op.lhs, p),
@@ -235,7 +235,7 @@ struct MakeRel<BiOp<T1, T2, Neq>> {
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Gr>> {
-	static void eval(Solver& self, BiOp<T1, T2, Gr> op, Priority p)
+	static void eval(ConstraintSolver& self, BiOp<T1, T2, Gr> op, Priority p)
 	{
 		if (p.hard()) {
 			auto constraint= self.solver.MakeGreater(	self.makeRel(op.lhs, p),
@@ -252,7 +252,7 @@ struct MakeRel<BiOp<T1, T2, Gr>> {
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Ls>> {
-	static void eval(Solver& self, BiOp<T1, T2, Ls> op, Priority p)
+	static void eval(ConstraintSolver& self, BiOp<T1, T2, Ls> op, Priority p)
 	{
 		if (p.hard()) {
 			auto constraint= self.solver.MakeLess(	self.makeRel(op.lhs, p),
@@ -269,7 +269,7 @@ struct MakeRel<BiOp<T1, T2, Ls>> {
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Geq>> {
-	static void eval(Solver& self, BiOp<T1, T2, Geq> op, Priority p)
+	static void eval(ConstraintSolver& self, BiOp<T1, T2, Geq> op, Priority p)
 	{
 		if (p.hard()) {
 			auto constraint= self.solver.MakeGreaterOrEqual(self.makeRel(op.lhs, p),
@@ -286,7 +286,7 @@ struct MakeRel<BiOp<T1, T2, Geq>> {
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Leq>> {
-	static void eval(Solver& self, BiOp<T1, T2, Leq> op, Priority p)
+	static void eval(ConstraintSolver& self, BiOp<T1, T2, Leq> op, Priority p)
 	{
 		if (p.hard()) {
 			auto constraint= self.solver.MakeLessOrEqual(	self.makeRel(op.lhs, p),
@@ -303,7 +303,7 @@ struct MakeRel<BiOp<T1, T2, Leq>> {
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, And>> {
-	static void eval(Solver& self, BiOp<T1, T2, And> op, Priority p)
+	static void eval(ConstraintSolver& self, BiOp<T1, T2, And> op, Priority p)
 	{
 		static_assert(isRelation<T1>() && isRelation<T2>(),
 				"Invalid exprs for && operator");
@@ -314,7 +314,7 @@ struct MakeRel<BiOp<T1, T2, And>> {
 
 template <typename T1, typename T2>
 struct MakeRel<BiOp<T1, T2, Or>> {
-	static void eval(Solver& self, BiOp<T1, T2, Or> op, Priority p)
+	static void eval(ConstraintSolver& self, BiOp<T1, T2, Or> op, Priority p)
 	{
 		static_assert(!sizeof(T1), "@todo ||");
 	}
@@ -322,7 +322,7 @@ struct MakeRel<BiOp<T1, T2, Or>> {
 
 template <typename T>
 struct MakeRel<UOp<T, Not>> {
-	static op::IntVar* eval(Solver& self, UOp<T, Not> op, Priority p)
+	static op::IntVar* eval(ConstraintSolver& self, UOp<T, Not> op, Priority p)
 	{
 		static_assert(!sizeof(T), "@todo Negation");
 	}
@@ -331,4 +331,4 @@ struct MakeRel<UOp<T, Not>> {
 } // detail
 } // eq
 
-#endif // EQ_SOLVER_HPP
+#endif // EQ_CONSTRAINTSOLVER_HPP

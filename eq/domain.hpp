@@ -2,7 +2,7 @@
 #define EQ_DOMAIN_HPP
 
 #include "basevar.hpp"
-#include "solver.hpp"
+#include "constraintsolver.hpp"
 #include "util.hpp"
 #include "varhandle.hpp"
 
@@ -25,7 +25,7 @@ public:
 		varInfos.emplace_back(
 			VarInfo{
 				handle,
-				[handle] (Domain& d, Solver& solver)
+				[handle] (Domain& d, ConstraintSolver& solver)
 				{
 					ensure(handle && "Invalid eq::Var handle");
 					Var<T, type>& var= static_cast<Var<T, type>&>(handle.get());
@@ -69,7 +69,7 @@ public:
 		relInfos.emplace_back(
 			RelInfo{
 				asHandles(rel.getVars()),
-				[rel] (Domain& d, Solver& solver)
+				[rel] (Domain& d, ConstraintSolver& solver)
 				{
 					solver.addRelation(rel);
 				}
@@ -85,7 +85,7 @@ public:
 		relInfos.emplace_back(
 			RelInfo {
 				asHandles(rel.getVars()),
-				[rel, priority_h] (Domain& d, Solver& solver)
+				[rel, priority_h] (Domain& d, ConstraintSolver& solver)
 				{
 					ensure(priority_h && "eq::PriorityVar has been destroyed");
 					Var<T2, VarType::priority>& p=
@@ -103,7 +103,7 @@ public:
 		if (!dirty)
 			return;
 
-		Solver solver;
+		ConstraintSolver solver;
 		for (auto&& info : varInfos)
 			info.post(*this, solver);
 		for (auto&& info : relInfos)
@@ -135,8 +135,8 @@ public:
 	}
 
 private:
-	using AddRel= std::function<void (Domain& d, Solver& solver)>;
-	using AddVar= std::function<void (Domain& d, Solver& solver)>;
+	using AddRel= std::function<void (Domain& d, ConstraintSolver& solver)>;
+	using AddVar= std::function<void (Domain& d, ConstraintSolver& solver)>;
 
 	struct VarInfo {
 		VarHandle handle;

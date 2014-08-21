@@ -1,4 +1,4 @@
-#include "solver.hpp"
+#include "constraintsolver.hpp"
 
 namespace eq {
 namespace detail {
@@ -75,12 +75,12 @@ private:
 
 } // detail
 
-void Solver::addVar(int& ref)
+void ConstraintSolver::addVar(int& ref)
 {
 	intVars.emplace_back(&ref, solver.MakeIntVar(minInt, maxInt));
 }
 
-void Solver::apply()
+void ConstraintSolver::apply()
 {
 	/// @todo Should undo this after solving
 	auto success_amount= solver.MakeSum(successAmounts)->Var();
@@ -111,7 +111,7 @@ void Solver::apply()
 	solver.EndSearch();
 }
 
-Solver::VarInfo<int>& Solver::getVarInfo(const int& ref)
+ConstraintSolver::VarInfo<int>& ConstraintSolver::getVarInfo(const int& ref)
 {
 	for (auto&& m : intVars) {
 		if (m.actual == &ref)
@@ -121,7 +121,7 @@ Solver::VarInfo<int>& Solver::getVarInfo(const int& ref)
 	throw std::runtime_error{"var not found"};
 }
 
-void Solver::tryEraseVarInfo(const int& ref)
+void ConstraintSolver::tryEraseVarInfo(const int& ref)
 {
 	auto it= std::find_if(intVars.begin(), intVars.end(),
 		[&ref] (const VarInfo<int>& info)
@@ -133,7 +133,7 @@ void Solver::tryEraseVarInfo(const int& ref)
 		intVars.erase(it);
 }
 
-void Solver::addSuccessVar(op::IntVar* success, detail::Priority p)
+void ConstraintSolver::addSuccessVar(op::IntVar* success, detail::Priority p)
 {
 	ensure(!p.hard());
 	ensure(success);
