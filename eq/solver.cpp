@@ -19,7 +19,7 @@ public:
 
 	virtual void EnterSearch()
 	{
-		has_init_solution_= false;
+		hasInitSolution_= false;
 		best_= kint64min;
 	}
 
@@ -29,15 +29,15 @@ public:
 	virtual bool AtSolution()
 	{
 		int64 val= var_->Value();
-		if (!has_init_solution_ || val > best_)
+		if (!hasInitSolution_ || val > best_)
 			best_= val;
-		has_init_solution_= true;
+		hasInitSolution_= true;
 	}
 
 	virtual bool AcceptSolution()
 	{
 		int64 val= var_->Value();
-		if (!has_init_solution_)
+		if (!hasInitSolution_)
 			return true;
 		else
 			return val > best_;
@@ -57,7 +57,8 @@ public:
 	 
 	void ApplyBound()
 	{
-		if (has_init_solution_) {
+		if (hasInitSolution_) {
+			/// @todo Searching by dividing ranges
 			var_->SetMin(best_ + 1);
 		}
 	}
@@ -65,7 +66,7 @@ public:
 private:
 	op::IntVar* const var_= nullptr;
 	int64 best_= 0;
-	bool has_init_solution_= false;
+	bool hasInitSolution_= false;
 	
 	DISALLOW_COPY_AND_ASSIGN(MaximizeVar);
 };
