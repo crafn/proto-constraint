@@ -6,7 +6,7 @@ namespace detail {
 /// Custom optimizer for or-tools solver
 /// Optimizes for solution which has biggest value for given IntVar
 /// Needs only 32 steps for int32 range, while or-tools MakeMaximize needs 4 billion
-/// @note May miss the absolute maximum. This can be prevented by using 64 steps
+/// @todo Actually implement the differing algorithm
 class MaximizeVar : public op::SearchMonitor {
 public:
 	MaximizeVar(op::Solver& solver, op::IntVar* var)
@@ -54,7 +54,7 @@ public:
 				var_);
 		visitor->EndVisitExtension(op::ModelVisitor::kObjectiveExtension);
 	}
-	 
+
 	void ApplyBound()
 	{
 		if (hasInitSolution_) {
@@ -77,7 +77,7 @@ private:
 
 void ConstraintSolver::addVar(int& ref)
 {
-	intVars.emplace_back(&ref, solver.MakeIntVar(minInt, maxInt));
+	vars.add(ref, *solver.MakeIntVar(minInt, maxInt));
 }
 
 void ConstraintSolver::apply()
@@ -86,18 +86,21 @@ void ConstraintSolver::apply()
 	auto success_amount= solver.MakeSum(successAmounts)->Var();
 	auto optimizer= solver.RevAlloc(new detail::MaximizeVar(solver, success_amount));
 
-	std::vector<op::IntVar*> vars;
-	for (auto&& v : intVars) {
-		vars.push_back(v.model);
+	std::vector<op::IntVar*> solver_vars;
+	for (auto&& v : vars) {
+		solver_vars.push_back(v.model);
 	}
-	auto db= solver.MakePhase(vars, op::Solver::CHOOSE_FIRST_UNBOUND, op::Solver::ASSIGN_CENTER_VALUE);
+	auto db= solver.MakePhase(
+			solver_vars,
+			op::Solver::CHOOSE_FIRST_UNBOUND,
+			op::Solver::ASSIGN_CENTER_VALUE);
 
 	solver.NewSearch(db, optimizer);
 	if (solver.NextSolution()) {
 		// Apparently last solution is the one which has the best success amount
 		do {
 			// Apply solution to actual variables
-			for (auto&& v : intVars) {
+			for (auto&& v : vars) {
 				ensure(v.actual && v.model);
 				*v.actual= v.model->Value();
 				//std::cout << "Solution: " << v.model->Value() << std::endl;
@@ -109,28 +112,6 @@ void ConstraintSolver::apply()
 	}
 	
 	solver.EndSearch();
-}
-
-ConstraintSolver::VarInfo<int>& ConstraintSolver::getVarInfo(const int& ref)
-{
-	for (auto&& m : intVars) {
-		if (m.actual == &ref)
-			return m;
-	}
-
-	throw std::runtime_error{"var not found"};
-}
-
-void ConstraintSolver::tryEraseVarInfo(const int& ref)
-{
-	auto it= std::find_if(intVars.begin(), intVars.end(),
-		[&ref] (const VarInfo<int>& info)
-		{
-			return info.actual == &ref;
-		});
-
-	if (it != intVars.end())
-		intVars.erase(it);
 }
 
 void ConstraintSolver::addSuccessVar(op::IntVar* success, detail::Priority p)

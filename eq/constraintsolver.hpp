@@ -3,6 +3,7 @@
 
 #include "expr.hpp"
 #include "util.hpp"
+#include "varstorage.hpp"
 
 #include <stdexcept>
 
@@ -51,8 +52,12 @@ private:
 
 } // detail
 
+/// Drawbacks using ConstraintSolver
+///	  - only integers
+///   - doesn't handle big ranges very well
 class ConstraintSolver {
 public:
+	static constexpr bool hasPrioritySupport= true;
 
 	void addVar(int& ref);
 
@@ -72,31 +77,7 @@ private:
 	template <typename T>
 	friend class detail::MakeRel;
 
-	template <typename T>
-	struct VarInfo {
-		VarInfo()= default;
-		VarInfo(T* actual, op::IntVar* model)
-			: actual(actual)
-			, model(model)
-		{ }
-		VarInfo(const VarInfo&)= default;
-		VarInfo(VarInfo&& other) : VarInfo(other) {}
-
-		VarInfo& operator=(const VarInfo&)= default;
-		VarInfo& operator=(VarInfo&& other){
-			// std::vector insists using move assign even when its deleted... (gcc 4.8.1)
-			return operator=(other); 
-		}
-
-		T* actual= nullptr;
-		op::IntVar* model= nullptr;
-	};
-
-	VarInfo<int>& getVarInfo(const int& ref);
-	void tryEraseVarInfo(const int& ref);
-
 	/// @todo Simplify expression trees so that unsupported operations vanish
-	/// @todo Check if IntExpr::Var() calls could be omitted
 	/// Creates solver constraints matching to expression
 	template <typename E>
 	auto makeRel(E&& t, detail::Priority p)
@@ -111,7 +92,7 @@ private:
 	static constexpr int maxInt= 9999;
 
 	op::Solver solver{"solver"};
-	DynArray<VarInfo<int>> intVars;
+	VarStorage<int, op::IntVar> vars;
 	/// Priorization is implemented by maximizing success of constraints
 	DynArray<op::IntVar*> successAmounts;
 };
@@ -134,7 +115,7 @@ template <typename T, VarType type>
 struct MakeRel<Var<T, type>> {
 	static op::IntVar* eval(ConstraintSolver& self, Var<T, type>& v, Priority p)
 	{
-		return self.getVarInfo(v.get()).model;
+		return self.vars.getInfo(v.get()).model;
 	}
 };
 
