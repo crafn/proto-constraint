@@ -21,8 +21,9 @@
 *.app
 
 # Temp/backup
-*.swp
+*.swn
 *.swo
+*.swp
 *~
 
 # Build
