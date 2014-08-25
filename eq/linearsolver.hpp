@@ -113,6 +113,22 @@ struct MakeLinRel<BiOp<T1, T2, Add>> {
 	}
 };
 
+/// @todo Sub
+
+template <typename E2>
+struct MakeLinRel<BiOp<Expr<Constant<double>>, E2, Mul>> {
+	static void eval(
+		LinearSolver& self,
+		BiOp<Expr<Constant<double>>, E2, Mul> op,
+		op::MPConstraint* c)
+	{
+		double lhs= op.lhs.get().get();
+		self.makeRel(op.rhs, c, lhs);
+	}
+};
+
+/// @todo Div
+
 template <typename E1>
 struct MakeLinRel<BiOp<E1, Expr<Constant<double>>, Eq>> {
 	static void eval(LinearSolver& self, BiOp<E1, Expr<Constant<double>>, Eq> op)
