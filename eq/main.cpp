@@ -192,8 +192,7 @@ int main()
 	{
 		// Uses linear solver
 		eq::Var<double> x, y;
-		rel(2.0*y == 2.0);
-		rel(2.0*x + 3.0*y == 5.51);
+		rel(y == 1.0 && 2.0*x + 3.0*y == 5.51);
 		std::cout << "Linear: " << x << std::endl;
 	}
 }

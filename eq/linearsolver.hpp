@@ -113,8 +113,6 @@ struct MakeLinRel<BiOp<T1, T2, Add>> {
 	}
 };
 
-/// @todo Sub
-
 template <typename E2>
 struct MakeLinRel<BiOp<Expr<Constant<double>>, E2, Mul>> {
 	static void eval(
@@ -127,8 +125,6 @@ struct MakeLinRel<BiOp<Expr<Constant<double>>, E2, Mul>> {
 	}
 };
 
-/// @todo Div
-
 template <typename E1>
 struct MakeLinRel<BiOp<E1, Expr<Constant<double>>, Eq>> {
 	static void eval(LinearSolver& self, BiOp<E1, Expr<Constant<double>>, Eq> op)
@@ -136,6 +132,20 @@ struct MakeLinRel<BiOp<E1, Expr<Constant<double>>, Eq>> {
 		double rhs= op.rhs.get().get();
 		auto c= self.solver.MakeRowConstraint(rhs, rhs);
 		self.makeRel(op.lhs, c);
+	}
+};
+
+/// @todo Geq
+/// @todo Leq
+
+template <typename E1, typename E2>
+struct MakeLinRel<BiOp<E1, E2, And>> {
+	static void eval(LinearSolver& self, BiOp<E1, E2, And> op)
+	{
+		static_assert(isRelation<E1>() && isRelation<E2>(),
+				"Invalid exprs for && operator");
+		self.makeRel(op.lhs);
+		self.makeRel(op.rhs);
 	}
 };
 
