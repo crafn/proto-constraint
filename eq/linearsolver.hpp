@@ -76,8 +76,6 @@ private:
 
 namespace detail {
 
-/// @todo Rest of expressions
-
 template <typename T>
 struct MakeLinRel<Expr<T>> {
 	template <typename... Args>
@@ -135,8 +133,25 @@ struct MakeLinRel<BiOp<E1, Expr<Constant<double>>, Eq>> {
 	}
 };
 
-/// @todo Geq
-/// @todo Leq
+template <typename E1>
+struct MakeLinRel<BiOp<E1, Expr<Constant<double>>, Geq>> {
+	static void eval(LinearSolver& self, BiOp<E1, Expr<Constant<double>>, Geq> op)
+	{
+		double rhs= op.rhs.get().get();
+		auto c= self.solver.MakeRowConstraint(rhs, self.solver.infinity());
+		self.makeRel(op.lhs, c);
+	}
+};
+
+template <typename E1>
+struct MakeLinRel<BiOp<E1, Expr<Constant<double>>, Leq>> {
+	static void eval(LinearSolver& self, BiOp<E1, Expr<Constant<double>>, Leq> op)
+	{
+		double rhs= op.rhs.get().get();
+		auto c= self.solver.MakeRowConstraint(-self.solver.infinity(), rhs);
+		self.makeRel(op.lhs, c);
+	}
+};
 
 template <typename E1, typename E2>
 struct MakeLinRel<BiOp<E1, E2, And>> {
