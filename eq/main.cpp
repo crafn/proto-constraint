@@ -190,13 +190,10 @@ int main()
 	}
 
 	{
-		eq::PriorityVar init;
-		eq::Var<int> a, b;
-
-		rel(b == 1337, init);
-		rel(a == 1 && b == 2);
-		a.clear();
-
-		std::cout << b << std::endl; // 1337
+		// Uses linear solver
+		eq::Var<double> x, y;
+		rel(y == 1.1);
+		rel(x + y == 1.5);
+		std::cout << "Linear: " << x << std::endl;
 	}
 }

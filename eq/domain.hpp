@@ -45,10 +45,8 @@ public:
 			}
 		);
 
-		/// @todo Check for doubles
-		if (type == VarType::priority)
-			addRelation(var > 0 && var < maxPriorityCount());
-
+		limitRange(var);
+		
 		dirty= true;
 	}
 
@@ -169,6 +167,15 @@ private:
 			var_handles.emplace_back(*ptr);
 		}
 		return var_handles;
+	}
+	
+	template <typename T>
+	void limitRange(T&) { }
+	template <typename T>
+	void limitRange(Var<T, VarType::priority>& var)
+	{	
+		/// @todo Check for doubles
+		addRelation(var > 0 && var < maxPriorityCount());
 	}
 
 	DynArray<VarInfo> varInfos;

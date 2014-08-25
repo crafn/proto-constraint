@@ -202,6 +202,24 @@ struct ToExpr<int&> {
 };
 
 template <>
+struct ToExpr<double> {
+	static Expr<Constant<double>> eval(double t)
+	{ return Expr<Constant<double>>{t}; }
+};
+
+template <>
+struct ToExpr<const double&> {
+	static Expr<Constant<double>> eval(double t)
+	{ return Expr<Constant<double>>{t}; }
+};
+
+template <>
+struct ToExpr<double&> {
+	static Expr<Constant<double>> eval(double t)
+	{ return Expr<Constant<double>>{t}; }
+};
+
+template <>
 struct ToExpr<bool> {
 	static Expr<Constant<bool>> eval(int t)
 	{ return Expr<Constant<bool>>{t}; }
