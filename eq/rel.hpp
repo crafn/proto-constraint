@@ -8,12 +8,17 @@ namespace eq {
 namespace detail {
 
 template <typename E>
-Domain& mergeDomains(E&& e)
+DomainOf<E>& mergeDomains(E&& e)
 {
-	auto&& ds= domains(e.getVars());
-	ensure(!ds.empty() && "Domain not found");
+	auto&& base_ds= domains(e.getVars());
+	ensure(!base_ds.empty() && "Domain not found");
+
+	using Domain= DomainOf<E>;
+	DynArray<Domain*> ds;
+	for (auto&& d : base_ds)
+		ds.push_back(&static_cast<Domain&>(*d));
 	
-	auto preserved= *ds.begin();
+	auto&& preserved= *ds.begin();
 	// Merge all domains which take part in the relation
 	for (auto&& d : ds) {
 		if (d == preserved)

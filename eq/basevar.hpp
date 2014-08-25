@@ -5,8 +5,8 @@
 
 namespace eq {
 
-class Domain;
-using DomainPtr= SharedPtr<Domain>;
+class BaseDomain;
+using BaseDomainPtr= SharedPtr<BaseDomain>;
 class VarHandle;
 
 enum class VarType {
@@ -30,14 +30,13 @@ public:
 	BaseVar& operator=(BaseVar&& other);
 
 	/// @todo These could be protected
-	Domain& getDomain() const { return *domain; }
-	void setDomainPtr(DomainPtr ptr) { domain= ptr; }
-	DomainPtr getDomainPtr() { return domain; }
+	BaseDomain& getDomain() const { return *domain; }
+	void setDomainPtr(BaseDomainPtr ptr) { domain= ptr; }
+	BaseDomainPtr getDomainPtr() { return domain; }
 
-protected:
+private:
 	friend class VarHandle;
-
-	DomainPtr domain;
+	BaseDomainPtr domain;
 	/// Handles to this
 	DynArray<VarHandle*> handles;
 };

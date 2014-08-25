@@ -6,12 +6,39 @@
 #include "varhandle.hpp"
 
 namespace eq {
+namespace detail {
+
+template <typename D1, typename D2>
+struct PickDomain;
+
+template <typename D>
+struct PickDomain<void, D> { using Type= D; };
+
+template <typename D>
+struct PickDomain<D, void> { using Type= D; };
+
+template <typename D>
+struct PickDomain<D, D> { using Type= D; };
+
+template <typename D1, typename D2>
+struct PickDomain {
+	static_assert(
+			!sizeof(D1),
+			"Expr contains different types of domains");
+};
+
+} // detail
+
+template <typename D1, typename D2>
+using PickDomain= typename detail::PickDomain<D1, D2>::Type;
 
 template <typename T>
 struct Expr {
 	T value;
 
 public:
+	using Domain= typename T::Domain;
+
 	Expr(T t)
 		: value(t) { }
 
@@ -29,6 +56,8 @@ public:
 
 template <typename T, VarType type>
 struct Expr<Var<T, type>> {
+	using Domain= typename Var<T, type>::Domain;
+
 	Expr(Var<T, type>& value)
 		: handle(value)
 	{ }
@@ -43,6 +72,8 @@ private:
 
 template <typename T>
 struct Constant {
+	using Domain= void;
+
 	Constant(T value)
 		: value(value)
 	{ }
@@ -60,6 +91,8 @@ private:
 /// Unary operator used in expression trees
 template <typename E, typename Op>
 struct UOp {
+	using Domain= typename E::Domain;
+
 	E e;
 
 	UOp(E e)
@@ -76,6 +109,8 @@ struct UOp {
 /// Binary operator used in expression trees
 template <typename E1, typename E2, typename Op>
 struct BiOp {
+	using Domain= PickDomain<typename E1::Domain, typename E2::Domain>;
+
 	E1 lhs;
 	E2 rhs;
 

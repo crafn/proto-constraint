@@ -10,18 +10,19 @@ namespace eq {
 template <typename T, VarType type= VarType::normal>
 class Var : public BaseVar {
 public:
+	using Domain= eq::Domain<ConstraintSolver>;
 
 	Var()
 	{
 		/// @todo Create domain as late as possible
-		domain= std::make_shared<Domain>();
-		domain->addVar(*this);
+		setDomainPtr(std::make_shared<Domain>());
+		getDomain().addVar(*this);
 	}
 
 	~Var()
 	{
-		if (domain)
-			domain->removeVar(*this);
+		if (getDomainPtr())
+			getDomain().removeVar(*this);
 	}
 
 	Var(const Var&)= default;
@@ -45,6 +46,9 @@ public:
 	T& get() { return value; }
 
 private:
+	Domain& getDomain() const
+	{ return static_cast<Domain&>(BaseVar::getDomain()); }
+
 	T value= 0;
 };
 

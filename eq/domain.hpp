@@ -3,13 +3,24 @@
 
 #include "basevar.hpp"
 #include "constraintsolver.hpp"
+#include "linearsolver.hpp"
 #include "util.hpp"
 #include "varhandle.hpp"
 
 namespace eq {
+class BaseDomain : public std::enable_shared_from_this<BaseDomain> {
+};
 
-class Domain : public std::enable_shared_from_this<Domain> {
+template <typename S>
+class Domain;
+
+template <typename S>
+using DomainPtr= SharedPtr<Domain<S>>;
+
+template <typename S>
+class Domain : public BaseDomain {
 public:
+	using Solver= S;
 	static int maxPriorityCount() { return 1024; }
 
 	Domain()= default;
@@ -25,7 +36,7 @@ public:
 		varInfos.emplace_back(
 			VarInfo{
 				handle,
-				[handle] (Domain& d, ConstraintSolver& solver)
+				[handle] (Domain& d, Solver& solver)
 				{
 					ensure(handle && "Invalid eq::Var handle");
 					Var<T, type>& var= static_cast<Var<T, type>&>(handle.get());
@@ -69,7 +80,7 @@ public:
 		relInfos.emplace_back(
 			RelInfo{
 				asHandles(rel.getVars()),
-				[rel] (Domain& d, ConstraintSolver& solver)
+				[rel] (Domain& d, Solver& solver)
 				{
 					solver.addRelation(rel);
 				}
@@ -81,11 +92,12 @@ public:
 	template <typename T1, typename T2>
 	void addRelation(Expr<T1> rel, Var<T2, VarType::priority>& priority)
 	{
+		static_assert(sizeof(T1) && Solver::hasPrioritySupport, "Solver doesn't have priority support");
 		VarHandle priority_h{priority};
 		relInfos.emplace_back(
 			RelInfo {
 				asHandles(rel.getVars()),
-				[rel, priority_h] (Domain& d, ConstraintSolver& solver)
+				[rel, priority_h] (Domain& d, Solver& solver)
 				{
 					ensure(priority_h && "eq::PriorityVar has been destroyed");
 					Var<T2, VarType::priority>& p=
@@ -103,7 +115,7 @@ public:
 		if (!dirty)
 			return;
 
-		ConstraintSolver solver;
+		Solver solver;
 		for (auto&& info : varInfos)
 			info.post(*this, solver);
 		for (auto&& info : relInfos)
@@ -135,8 +147,8 @@ public:
 	}
 
 private:
-	using AddRel= std::function<void (Domain& d, ConstraintSolver& solver)>;
-	using AddVar= std::function<void (Domain& d, ConstraintSolver& solver)>;
+	using AddRel= std::function<void (Domain& d, Solver& solver)>;
+	using AddVar= std::function<void (Domain& d, Solver& solver)>;
 
 	struct VarInfo {
 		VarHandle handle;
@@ -166,9 +178,9 @@ private:
 	bool dirty= false;
 };
 
-Set<DomainPtr> domains(const Set<BaseVar*>& vars)
+Set<BaseDomainPtr> domains(const Set<BaseVar*>& vars)
 {
-	Set<DomainPtr> ds;
+	Set<BaseDomainPtr> ds;
 	for (auto&& v : vars) {
 		ensure(v);
 		ds.insert(v->getDomainPtr());
@@ -176,6 +188,8 @@ Set<DomainPtr> domains(const Set<BaseVar*>& vars)
 	return ds;
 }
 
+template <typename E>
+using DomainOf= typename RemoveConst<RemoveRef<E>>::Domain;
 
 } // eq
 
