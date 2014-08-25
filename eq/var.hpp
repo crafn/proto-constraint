@@ -5,12 +5,29 @@
 #include "domain.hpp"
 
 namespace eq {
+namespace detail {
+
+template <typename T>
+struct ChooseSolver { static_assert(!sizeof(T), "Type not supported"); };
+template <>
+struct ChooseSolver<int> { using Type= ConstraintSolver; };
+template <>
+struct ChooseSolver<double> { using Type= LinearSolver; };
+
+} // detail
+
+template <typename T>
+using ChooseSolver= typename detail::ChooseSolver<T>::Type;
 
 /// Variable that has value determined by constraints
+/// Currently supported types are int and double
+/// Var<int> uses ConstraintSolver and Var<double> uses LinearSolver
 template <typename T, VarType type= VarType::normal>
 class Var : public BaseVar {
+
 public:
-	using Domain= eq::Domain<ConstraintSolver>;
+	/// @todo Maybe solver shouldn't be chosen implicitly
+	using Domain= eq::Domain<ChooseSolver<T>>;
 
 	Var()
 	{
